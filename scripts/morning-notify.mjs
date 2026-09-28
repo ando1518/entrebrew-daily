@@ -1,5 +1,5 @@
 // 毎朝の通知を送るスクリプト（GitHub Actions から実行）
-// 通知をオンにした人ごとに、その日のタスク・予定・未確認の連絡をまとめて送る。
+// 通知をオンにした人ごとに、その日のタスク・予定・未確認の連絡・誕生日をまとめて送る。
 import admin from 'firebase-admin';
 
 const APP_URL = process.env.APP_URL || 'https://ando1518.github.io/entrebrew-daily/';
@@ -73,12 +73,6 @@ async function main() {
     }).length;
     const myTasks = tasks.filter(t => t.status !== 'done' && (t.assignee === uid || deptHits(t.depts)) && t.due && t.due <= today);
     const overdue = myTasks.filter(t => t.due < today).length;
-    let todos = 0;
-    try {
-      const td = await db.collection(`users/${uid}/todos`).get();
-      todos = td.docs.map(d => d.data()).filter(x => !x.done && x.due && x.due <= today).length;
-    } catch (e) { /* 読めなくても続ける */ }
-
     const lines = [];
     if (unread) lines.push(`未確認の連絡 ${unread}件`);
     if (myTasks.length) lines.push(`今日までのタスク ${myTasks.length}件${overdue ? `（期限切れ ${overdue}件）` : ''}`);
@@ -86,7 +80,6 @@ async function main() {
       const e = events[0];
       lines.push(`今日の予定：${e.time ? e.time + ' ' : ''}${e.title || ''}${events.length > 1 ? ` ほか${events.length - 1}件` : ''}`);
     }
-    if (todos) lines.push(`今日のTODO ${todos}件`);
     const bd = bdays.filter(b => b.id !== uid);
     if (bd.length) lines.push(`今日は${bd.map(b => b.name + 'さん').join('、')}の誕生日です`);
     if (bdays.some(b => b.id === uid)) lines.unshift('お誕生日おめでとうございます！');

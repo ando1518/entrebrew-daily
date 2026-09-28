@@ -317,6 +317,33 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .s-doing{background:var(--accent-soft);color:var(--accent-ink)}
 .s-done{background:var(--leaf-soft);color:var(--leaf)}
 
+/* folders */
+.docs-q{margin-bottom:14px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.fcard{display:grid;gap:3px;justify-items:start;align-content:start;text-align:left;background:var(--surface);border:0;border-radius:var(--r);padding:14px;box-shadow:var(--shadow);min-width:0}
+.fcard svg{width:36px;height:30px;margin-bottom:6px}
+.fcard b{font-size:14.5px;line-height:1.35;overflow-wrap:anywhere}
+.fcard span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.flist{display:grid;grid-template-columns:minmax(0,1fr);background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.frow{display:flex;align-items:center;gap:2px;padding-right:6px;border-top:1px solid var(--line);min-width:0}
+.frow:first-child{border-top:0}
+.fmain{flex:1;min-width:0;display:flex;align-items:center;gap:12px;border:0;background:none;text-align:left;padding:10px 6px 10px 12px}
+.fk{flex:none;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:10.5px;font-weight:800;color:#fff;background:var(--fk)}
+.fmt{min-width:0;display:grid}
+.fmt b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fmt span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.shrink{margin-left:4px}
+.shrink::before{content:"（"}.shrink::after{content:"）"}
+.fhead{display:flex;align-items:center;gap:10px;margin-top:4px}
+.fic svg{width:30px;height:25px;display:block}
+.fpreview{width:100%;border-radius:12px;background:var(--surface2)}
+.att,.ratt{display:flex;flex-wrap:wrap;gap:6px}
+.ratt{margin-top:10px}
+.attchip{display:inline-flex;align-items:center;gap:6px;max-width:100%;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:5px 10px;font-size:13px;font-weight:700;color:var(--ink);overflow-wrap:anywhere;text-align:left}
+.attchip small{color:var(--muted);font-weight:400;white-space:nowrap}
+.attchip button{border:0;background:none;color:var(--muted);padding:0 2px;font-size:17px;line-height:1}
+.saved-to{display:inline-block;margin-top:8px}
+
 /* sheet */
 .back{position:fixed;inset:0;background:var(--scrim);z-index:30;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;animation:up .18s ease-out}
@@ -382,7 +409,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
     <button class="tab" type="button" data-v="tasks"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="4"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span>タスク<span class="badge" id="bTasks" hidden></span></button>
     <button class="tab" type="button" data-v="reports"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-5 4v-4.5"/><path d="M8.5 9h7M8.5 12h4.5"/></svg></span>報告<span class="badge" id="bReports" hidden></span></button>
     <button class="tab" type="button" data-v="calendar"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg></span>予定</button>
-    <button class="tab" type="button" data-v="todo"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6.5h10M10 12h10M10 17.5h10"/><path d="m3.5 6.5 1.5 1.5 2.5-3M3.5 12l1.5 1.5 2.5-3M3.5 17.5 5 19l2.5-3"/></svg></span>TODO</button>
+    <button class="tab" type="button" data-v="docs"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7A2 2 0 0 1 5.5 5h4l2 2.2h7A2 2 0 0 1 20.5 9.2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M3.5 10.5h17"/></svg></span>資料</button>
     <button class="tab" type="button" data-v="org"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="5" rx="1.5"/><rect x="3" y="16" width="6" height="5" rx="1.5"/><rect x="15" y="16" width="6" height="5" rx="1.5"/><path d="M12 8v4M6 16v-4h12v4"/></svg></span>組織</button>
   </div>
 </nav>
@@ -423,8 +450,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.5.0';
+const APP_VERSION='1.6.0';
 const CHANGELOG=[
+  {v:'1.6.0',date:'2026-09-28',items:['TODOを「資料」フォルダに変更しました。フォルダはだれでも作成・追加できます','報告にファイルを添付できるようになりました。本文に「〇〇フォルダに保存」と書くと、そのフォルダに保存されます','写真は自動で軽く変換して保存します']},
   {v:'1.5.0',date:'2026-09-28',items:['毎朝、その日のタスク・予定・未確認の連絡をお知らせする通知を追加（右上のベルからオンにできます）','部署名を「経営管理総務部」「経営管理経理部」に変更','ホーム画面に追加すると、専用のアイコンで起動できるようになりました']},
   {v:'1.4.0',date:'2026-09-28',items:['経営管理部を総務部と経理部に分けました（該当の方はプロフィールで部署を選び直してください）','タスクの担当に「部門」タブを追加し、部門ごとに割り当てられるようになりました','予定に担当者・担当部門・タブカラーを設定できるようになりました']},
   {v:'1.3.0',date:'2026-09-27',items:['自分のアカウント（Google またはメールアドレス）でログインして使えるようになりました','大学のメールアドレス（s＋数字6桁）ならすぐに参加できます','プロフィールで表示名を変えられるようになりました']},
@@ -432,7 +460,7 @@ const CHANGELOG=[
   {v:'1.1.0',date:'2026-09-27',items:['部署ごとのまとめてメンション（@EC部 など）','初回の所属部署登録とプロフィール（誕生日・事業にかける思い）','組織図タブを追加','ホームとカレンダーに誕生日を表示']},
   {v:'1.0.0',date:'2026-09-27',items:['タスク・報告・メンション・カレンダー・TODOで公開']}];
 const FB_ST={'受付':'s-new','対応中':'s-doing','対応済み':'s-done'};
-const VIEW_NAME={home:'ホーム',tasks:'タスク',reports:'報告',calendar:'予定',todo:'TODO',org:'組織'};
+const VIEW_NAME={home:'ホーム',tasks:'タスク',reports:'報告',calendar:'予定',docs:'資料',org:'組織'};
 function seenVersion(){try{return localStorage.getItem('eb-seen');}catch(e){return APP_VERSION;}}
 function markSeen(){try{localStorage.setItem('eb-seen',APP_VERSION);}catch(e){}S.seenOk=true;}
 const unseen=()=>!S.seenOk&&seenVersion()!==APP_VERSION;
@@ -443,7 +471,7 @@ function updCard(){
     <div class="actions"><button type="button" class="btn ghost" data-about>更新履歴を見る</button><span class="sp"></span><button type="button" class="btn primary" data-seen>OK</button></div></section>`;
 }
 
-const S={view:'home',tasks:[],reports:[],events:[],todos:[],members:{},membersLoaded:false,orgOpen:new Set(),myFb:[],seenOk:false,me:{id:null,name:'',avatarUrl:'',color:'#5B716B'},
+const S={view:'home',tasks:[],reports:[],events:[],todos:[],folders:[],files:[],folderOpen:null,docsQ:'',members:{},membersLoaded:false,orgOpen:new Set(),myFb:[],seenOk:false,me:{id:null,name:'',avatarUrl:'',color:'#5B716B'},
   canWrite:true,preview:false,loaded:false,taskFilter:'mine',repFilter:'all',calMonth:null,calSel:today(),P:{}};
 const FIREBASE_CONFIG={
   apiKey:"AIzaSyAp7rKbZ6-HquNd31RxhA5E74e7m6CgaeQ",
@@ -582,14 +610,14 @@ function paint(){
   $('#banner').hidden=!S.preview;
   $('#hdot').hidden=!unseen();
   $('#meAv').innerHTML=S.me.id?av(S.me.id):'';
-  const fab=$('#fab'),F={home:'報告する',tasks:'タスク追加',reports:'報告する',calendar:'予定を追加'};
+  const fab=$('#fab'),F={home:'報告する',tasks:'タスク追加',reports:'報告する',calendar:'予定を追加',docs:S.folderOpen?'ファイルを追加':'フォルダを作成'};
   fab.hidden=!S.loaded||!S.canWrite||!F[S.view];
   if(F[S.view])fab.innerHTML=PLUS+`<span>${F[S.view]}</span>`;
   const v=$('#view');
-  if(S.view==='todo'&&v.dataset.v==='todo'&&$('#todoList')){$('#todoList').innerHTML=todoList();return;}
+  const vk=S.view==='docs'?'docs:'+(S.folderOpen||''):S.view;
+  if(vk==='docs:'&&v.dataset.v===vk&&$('#docsBody')){$('#docsBody').innerHTML=docsBody();return;}
   v.innerHTML=(VIEWS[S.view]||VIEWS.home)();
-  v.dataset.v=S.view;
-  if(S.view==='todo')mountTodoForm();
+  v.dataset.v=vk;
 }
 function roNote(){return (!S.canWrite&&S.loaded&&!S.preview)?'<div class="readonly">閲覧のみの権限です。</div>':'';}
 function empty(t,s){return `<div class="empty"><b>${t}</b>${s||''}</div>`;}
@@ -630,6 +658,8 @@ function reportCard(r){
       <div class="r-meta"><span class="pill ${CAT[r.cat]||'c-share'}">${esc(r.cat||'共有')}</span>${toMe?'<span class="pill to-me">あなた宛て</span>':''}<span>${ago(r.createdAt)}</span></div></div>
     </div>
     <p class="r-body">${richBody(r.body)}</p>
+    ${(r.files||[]).length?`<div class="ratt">${r.files.map(f=>`<button type="button" class="attchip" data-fopen="${esc(f.id)}">${esc(f.name)}<small>${fmtSize(f.size)}</small></button>`).join('')}</div>`:''}
+    ${r.folderId&&S.folders.some(x=>x.id===r.folderId)?`<button type="button" class="link saved-to" data-fold="${esc(r.folderId)}">「${esc(S.folders.find(x=>x.id===r.folderId).name)}」フォルダに保存済み</button>`:''}
     <div class="r-foot">
       <button class="ack ${mine?'on':''}" type="button" data-ack="${esc(r.id)}">${CHECK}${mine?'確認済み':'確認しました'}</button>
       ${acks.length?`<span class="stack">${acks.slice(0,4).map(i=>av(i,'sm')).join('')}</span><span class="ack-n">${acks.length}人が確認</span>`:''}
@@ -667,7 +697,6 @@ home(){
   const nm=S.me.name||(S.P[S.me.id]||{}).name;
   const mine=myOpenTasks(),ment=myMentions();
   const evT=S.events.filter(e=>e.date===t).sort(byTime);
-  const todoT=S.todos.filter(x=>!x.done&&x.due&&x.due<=t).sort(byDue);
   const latest=sortedReports().filter(r=>!ment.includes(r)).slice(0,3);
   const bdays=upcomingBdays(7);
   return `${roNote()}${unseen()?updCard():''}${pushPromptHtml()}<section class="hero">
@@ -686,8 +715,6 @@ home(){
     <div class="list">${mine.length?mine.slice(0,4).map(taskCard).join(''):empty('担当タスクはありません','新しいタスクは「タスク」から追加できます')}</div></section>
   <section class="sec"><div class="sec-h"><h2>今日の予定</h2><button class="link" type="button" data-go="calendar">カレンダー</button></div>
     <div class="list">${evT.length?evT.map(eventRow).join(''):empty('今日の予定はありません')}</div></section>
-  ${todoT.length?`<section class="sec"><div class="sec-h"><h2>今日のTODO</h2><button class="link" type="button" data-go="todo">TODOを開く</button></div>
-    <div class="todo-card">${todoT.map(todoRow).join('')}</div></section>`:''}
   <section class="sec"><div class="sec-h"><h2>最新の報告</h2><button class="link" type="button" data-go="reports">すべて見る</button></div>
     <div class="list">${latest.length?latest.map(reportCard).join(''):empty('まだ報告はありません','右下の「報告する」から最初の報告を投稿しましょう')}</div></section>`;
 },
@@ -753,15 +780,11 @@ org(){
   ${unassigned.length?`<section class="sec"><div class="sec-h"><h2>部署未登録</h2></div><div class="org-body">${memRows(unassigned)}</div></section>`:''}
   <p class="org-hint" style="margin-top:16px">部署名をタップするとメンバーが表示されます。報告で「@部署名」と書くと、その部署の全員にまとめてメンションできます。</p>`;
 },
-todo(){
-  if(!S.me.id&&!S.preview)return `<h1 class="pg">TODO</h1>${S.loaded?empty('個人のTODOを使うにはサインインが必要です'):loading()}`;
-  return `<h1 class="pg">TODO</h1>
-  <form class="todo-add" id="todoForm" autocomplete="off">
-    <input id="todoText" maxlength="120" placeholder="やることを入力（自分だけに表示）" required>
-    <input id="todoDue" type="date" aria-label="期限">
-    <button class="btn primary" type="submit">追加</button>
-  </form>
-  <div id="todoList">${todoList()}</div>`;
+docs(){
+  if(S.folderOpen)return folderView();
+  return `<h1 class="pg">資料</h1>
+  <input id="docsQ" class="docs-q" type="search" placeholder="資料やフォルダを検索" aria-label="資料を検索" value="${esc(S.docsQ||'')}" autocomplete="off">
+  ${loading()}<div id="docsBody">${docsBody()}</div>`;
 }
 };
 function todoRow(x){
@@ -854,8 +877,31 @@ function reportSheet(){
       <div class="sugg" id="mS" hidden></div>
       <div><button type="button" class="seg-like btn ghost" id="atBtn" style="padding:6px 14px;font-size:13.5px">@ メンションを追加</button></div>
     </div>
+    <div class="fld">添付ファイル <span class="hint">写真は自動で軽くして保存されます（1ファイル15MBまで）</span>
+      <div class="att" id="rAtt"></div>
+      <div><button type="button" class="btn ghost" id="rAttBtn" style="padding:6px 14px;font-size:13.5px">ファイルを添付</button></div></div>
+    <div class="fld" id="rFoldWrap" hidden><label for="rFold">保存先フォルダ</label><select id="rFold" class="fsel"></select><span class="hint" id="rFoldHint"></span></div>
     <div class="actions"><span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button><button class="btn primary" type="submit">投稿する</button></div></form>`);
   const ta=$('#rBody'),SG=$('#mS');
+  let files=[],userFold=false;
+  const syncFold=()=>{
+    const det=folderFromText(ta.value),w=$('#rFoldWrap'),sel=$('#rFold');
+    w.hidden=!(files.length||det);if(w.hidden)return;
+    const cur=sel.value,opts=[];
+    if(det&&!folderByName(det))opts.push(`<option value="new:${esc(det)}">「${esc(det)}」を新しく作る</option>`);
+    if(!folderByName(DEFAULT_REPORT_FOLDER))opts.push(`<option value="new:${DEFAULT_REPORT_FOLDER}">${DEFAULT_REPORT_FOLDER}（新しく作る）</option>`);
+    S.folders.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','ja')).forEach(f=>opts.push(`<option value="id:${esc(f.id)}">${esc(f.name)}</option>`));
+    sel.innerHTML=opts.join('');
+    let want=cur;
+    if(!userFold){const n=det||DEFAULT_REPORT_FOLDER,h=folderByName(n);want=h?'id:'+h.id:'new:'+n;}
+    if([...sel.options].some(o=>o.value===want))sel.value=want;
+    $('#rFoldHint').textContent=files.length?'':'添付がないので、報告の本文をテキストファイルとして保存します';
+  };
+  const renderAtt=()=>{$('#rAtt').innerHTML=files.map((f,i)=>`<span class="attchip">${esc(f.name)}<small>${fmtSize(f.size)}</small><button type="button" data-rmatt="${i}" aria-label="添付を外す">×</button></span>`).join('');syncFold();};
+  $('#rAttBtn').addEventListener('click',()=>pickFiles(fs=>{files=files.concat(fs).slice(0,10);renderAtt();}));
+  $('#rAtt').addEventListener('click',e=>{const b=e.target.closest('[data-rmatt]');if(!b)return;files.splice(Number(b.dataset.rmatt),1);renderAtt();});
+  $('#rFold').addEventListener('change',()=>{userFold=true;});
+  ta.addEventListener('input',syncFold);
   $('#rCat').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;cat=b.dataset.c;$('#rCat').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
   const check=async()=>{
     const pos=ta.selectionStart,pre=ta.value.slice(0,pos),m=pre.match(/@([^\s@]{0,20})$/);
@@ -896,13 +942,30 @@ function reportSheet(){
   $('#f').addEventListener('submit',async e=>{
     e.preventDefault();
     let body=ta.value.trim();if(!body)return;
+    const raw=body,fv=$('#rFoldWrap').hidden?'':$('#rFold').value;
     const ids=new Set(),depts=[];
     DEPTS.slice().sort((a,b)=>b.length-a.length).forEach(d=>{const tok='@'+d;if(body.includes(tok)){body=body.split(tok).join('@{g:'+d+'}');depts.push(d);deptMembers(d).forEach(i=>ids.add(i));}});
     picked.sort((a,b)=>b.name.length-a.name.length).forEach(p=>{const tok='@'+p.name;if(body.includes(tok)){body=body.split(tok).join('@{'+p.id+'}');ids.add(p.id);}});
     ids.delete(S.me.id);
     closeSheet();
-    const ok=await add('reports',{author:S.me.id,cat,body,mentions:[...ids],depts:DEPTS.filter(d=>depts.includes(d)),acks:{},createdAt:Date.now()});
-    if(ok)toast(depts.length?`投稿しました（${depts.join('・')}ほか ${ids.size}人にメンション）`:ids.size?`投稿しました（${ids.size}人にメンション）`:'投稿しました');
+    const ref=db.collection('reports').doc();
+    let saved=[],folderId=null;
+    if(fv){
+      try{folderId=fv.startsWith('id:')?fv.slice(3):await ensureFolder(fv.slice(4));}catch(err){fail(err);}
+      if(folderId){
+        let toSave=files;
+        if(!toSave.length){
+          const d=new Date(),stamp=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+          toSave=[new File([`${cat}｜${pname(S.me.id)}｜${d.toLocaleString('ja-JP')}\n\n${raw}\n`],`報告_${stamp}_${pname(S.me.id)}.txt`,{type:'text/plain'})];
+        }
+        saved=await uploadMany(toSave,folderId,{reportId:ref.id});
+      }
+    }
+    try{
+      await ref.set({author:S.me.id,cat,body,mentions:[...ids],depts:DEPTS.filter(d=>depts.includes(d)),acks:{},createdAt:Date.now(),
+        files:saved.map(f=>({id:f.id,name:f.name,size:f.size})),folderId:saved.length?folderId:null});
+      setTimeout(()=>toast(depts.length?`投稿しました（${depts.join('・')}ほか ${ids.size}人にメンション）`:ids.size?`投稿しました（${ids.size}人にメンション）`:'投稿しました'),saved.length?2600:0);
+    }catch(err){fail(err);}
   });
   setTimeout(()=>ta.focus(),60);
 }
@@ -1050,9 +1113,19 @@ function setView(v){
 /* ---------- events ---------- */
 document.addEventListener('click',async e=>{
   if(e.target.closest('[data-logout]')){closeSheet();if(pushGet())await disablePush(true);if(auth)auth.signOut();return;}
-  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],#fab');
+  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-rmatt],#fab');
   if(!g){if(e.target.id==='back')closeSheet();return;}
   const ds=g.dataset;
+  if('rmatt' in ds)return;
+  if(ds.fold){closeSheet();S.folderOpen=ds.fold;S.docsQ='';if(S.view!=='docs')setView('docs');else{paint();window.scrollTo(0,0);}return;}
+  if('foldback' in ds){S.folderOpen=null;paint();return;}
+  if(ds.foldedit){folderSheet(ds.foldedit);return;}
+  if(ds.fopen){openFile(ds.fopen,false);return;}
+  if(ds.fsave){openFile(ds.fsave,true);return;}
+  if(ds.fdel){
+    if(!g.classList.contains('armed')){g.classList.add('armed');g.style.color='var(--cherry)';toast('もう一度押すと削除します');setTimeout(()=>{if(g.isConnected){g.classList.remove('armed');g.style.color='';}},3000);return;}
+    deleteFile(ds.fdel);return;
+  }
   if('pushon' in ds){const hs=$('#pushHour');g.disabled=true;await enablePush(hs?Number(hs.value):7);g.disabled=false;refreshPushUi();return;}
   if('pushoff' in ds){await disablePush(false);refreshPushUi();return;}
   if('pushdismiss' in ds){try{localStorage.setItem('eb-push-dismiss','1');}catch(e){}paint();return;}
@@ -1063,9 +1136,9 @@ document.addEventListener('click',async e=>{
   if(ds.prof){profileSheet(ds.prof);return;}
   if('myprof' in ds){if(!S.me.id){toast('サインインするとプロフィールを登録できます');return;}if(memberOf(S.me.id))profileSheet(S.me.id);else if(S.canWrite)profileForm(false);return;}
   if('editprof' in ds){profileForm(false);return;}
-  if(g.id==='fab'){({home:reportSheet,reports:reportSheet,tasks:()=>taskSheet(),calendar:()=>eventSheet(null,S.calSel)})[S.view]?.();return;}
+  if(g.id==='fab'){({home:reportSheet,reports:reportSheet,tasks:()=>taskSheet(),calendar:()=>eventSheet(null,S.calSel),docs:()=>{if(S.folderOpen){const fid=S.folderOpen;pickFiles(fs=>uploadMany(fs,fid));}else folderSheet();}})[S.view]?.();return;}
   if(ds.close!==undefined){closeSheet();return;}
-  if(g.classList.contains('tab')){setView(ds.v);return;}
+  if(g.classList.contains('tab')){if(ds.v==='docs')S.folderOpen=null;setView(ds.v);return;}
   if(ds.go){if(ds.rf)S.repFilter=ds.rf;setView(ds.go);return;}
   if(ds.rf){S.repFilter=ds.rf;paint();return;}
   if(ds.tf){S.taskFilter=ds.tf;paint();return;}
@@ -1087,6 +1160,9 @@ document.addEventListener('click',async e=>{
   }
   if(ds.td){const x=S.todos.find(y=>y.id===ds.td);if(x)await upd('todos',x.id,{done:!x.done,doneAt:x.done?0:Date.now()});return;}
   if(ds.tdx){await del('todos',ds.tdx);return;}
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='docsQ'){S.docsQ=e.target.value;const b=$('#docsBody');if(b)b.innerHTML=docsBody();}
 });
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!$('#back').hidden){closeSheet();return;}
@@ -1204,6 +1280,197 @@ function gateDenied(u){
   $('#gOut').onclick=()=>auth.signOut();
 }
 
+/* ---------- 資料フォルダ ---------- */
+// ファイルは軽くしてから、Firestore に小分け（約700KBずつ）にして保存する
+const CHUNK=700000,MAX_FILE=15*1024*1024,MAX_IMG_EDGE=2000;
+const DEFAULT_REPORT_FOLDER='報告の添付';
+const FOLDER_COLORS=['#FFA41B','#2872D9','#15A36A','#C2459E','#7A4FD0','#1C9BB8','#DC3F47','#9A7433'];
+const fmtSize=n=>!n?'0 B':n<1024?n+' B':n<1048576?Math.round(n/1024)+' KB':(n/1048576).toFixed(1)+' MB';
+const fmtDate=ms=>{if(!ms)return '';const d=new Date(ms);return `${d.getMonth()+1}/${d.getDate()}`;};
+const KINDS={pdf:['PDF','#DC3F47'],image:['画像','#15A36A'],doc:['DOC','#2872D9'],sheet:['XLS','#1E8E5A'],slide:['PPT','#E08A12'],text:['TXT','#5B716B'],zip:['ZIP','#7A4FD0'],media:['動画','#C2459E'],other:['FILE','#5B716B']};
+function fileKind(name,type){
+  const e=((name||'').split('.').pop()||'').toLowerCase();
+  if(e==='pdf'||type==='application/pdf')return 'pdf';
+  if((type||'').startsWith('image/')||['jpg','jpeg','png','webp','gif','heic','bmp'].includes(e))return 'image';
+  if(['doc','docx','odt','rtf','pages'].includes(e))return 'doc';
+  if(['xls','xlsx','csv','ods','numbers'].includes(e))return 'sheet';
+  if(['ppt','pptx','odp','key'].includes(e))return 'slide';
+  if(['txt','md','json','html','xml'].includes(e)||(type||'').startsWith('text/'))return 'text';
+  if(['zip','7z','rar','gz'].includes(e))return 'zip';
+  if(/^(video|audio)\//.test(type||'')||['mp4','mov','m4a','mp3','wav'].includes(e))return 'media';
+  return 'other';
+}
+async function blobToB64(blob){
+  const u=new Uint8Array(await blob.arrayBuffer());let s='';
+  for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));
+  return btoa(s);
+}
+function b64ToBytes(b){const s=atob(b),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
+async function gz(blob){
+  if(!('CompressionStream' in window))return null;
+  try{return await new Response(blob.stream().pipeThrough(new CompressionStream('gzip'))).blob();}catch(e){return null;}
+}
+async function gunzip(blob){return await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).blob();}
+// 写真・画像：長い辺を2000pxまで縮め、WebP（使えない端末はJPEG）に変換
+async function shrinkImage(file){
+  if(!/^image\/(jpeg|png|webp|bmp)$/.test(file.type||''))return null;
+  try{
+    const bmp=await createImageBitmap(file);
+    const sc=Math.min(1,MAX_IMG_EDGE/Math.max(bmp.width,bmp.height));
+    const w=Math.max(1,Math.round(bmp.width*sc)),h=Math.max(1,Math.round(bmp.height*sc));
+    const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+    const toB=(t,q)=>new Promise(r=>c.toBlob(r,t,q));
+    x.drawImage(bmp,0,0,w,h);
+    let out=await toB('image/webp',0.8);
+    if(!out||out.type!=='image/webp'){x.globalCompositeOperation='destination-over';x.fillStyle='#fff';x.fillRect(0,0,w,h);out=await toB('image/jpeg',0.82);}
+    return out&&out.size<file.size*0.95?out:null;
+  }catch(e){return null;}
+}
+async function prepareFile(file){
+  let name=file.name||'ファイル',type=file.type||'application/octet-stream',blob=file,conv='',enc='';
+  const img=await shrinkImage(file);
+  if(img){blob=img;type=img.type;conv=img.type==='image/webp'?'WebP':'JPEG';name=name.replace(/\.[^.]+$/,'')+(img.type==='image/webp'?'.webp':'.jpg');}
+  const k=fileKind(name,type);
+  if(!['image','zip','media'].includes(k)&&!/\.(docx|xlsx|pptx)$/i.test(name)){
+    const z=await gz(blob);if(z&&z.size<blob.size*0.9){blob=z;enc='gzip';}
+  }
+  return {blob,name,type,enc,conv,origSize:file.size,size:blob.size};
+}
+async function uploadFile(file,folderId,extra){
+  const p=await prepareFile(file);
+  if(p.size>MAX_FILE){const e=new Error('too-big');e.code='too-big';e.fileName=file.name;e.size=p.size;throw e;}
+  const ref=db.collection('files').doc();
+  const parts=Math.max(1,Math.ceil(p.blob.size/CHUNK));
+  for(let i=0;i<parts;i++){
+    const d=await blobToB64(p.blob.slice(i*CHUNK,(i+1)*CHUNK));
+    await ref.collection('chunks').doc(String(i).padStart(3,'0')).set({i,d});
+  }
+  const meta={folderId,name:p.name,origName:file.name||p.name,type:p.type,enc:p.enc,conv:p.conv,size:p.size,origSize:p.origSize,parts,by:S.me.id,createdAt:Date.now(),...(extra||{})};
+  await ref.set(meta);
+  db.collection('folders').doc(folderId).update({updatedAt:Date.now()}).catch(()=>{});
+  return {id:ref.id,...meta};
+}
+async function uploadMany(files,folderId,extra){
+  const done=[],bad=[];let saved=0,orig=0;
+  for(let i=0;i<files.length;i++){
+    toast(`軽くして保存しています…（${i+1}/${files.length}）`);
+    try{const r=await uploadFile(files[i],folderId,extra);done.push(r);saved+=r.size;orig+=r.origSize;}
+    catch(e){console.warn(e);bad.push({name:files[i].name,why:e.code==='too-big'?`${fmtSize(e.size)}あり大きすぎます（上限15MB）`:e.code==='permission-denied'?'保存する権限がありません':'保存できませんでした'});}
+  }
+  if(done.length)toast(`${done.length}件を保存しました（${fmtSize(orig)} → ${fmtSize(saved)}）`);
+  if(bad.length)setTimeout(()=>toast(`${bad.map(b=>b.name).join('、')}：${bad[0].why}`),2800);
+  return done;
+}
+async function fetchFileBlob(f){
+  const cs=await db.collection('files').doc(f.id).collection('chunks').orderBy('i').get();
+  let blob=new Blob(cs.docs.map(d=>b64ToBytes(d.data().d)));
+  if(f.enc==='gzip')blob=await gunzip(blob);
+  return new Blob([blob],{type:f.type||'application/octet-stream'});
+}
+async function openFile(id,save){
+  let f=S.files.find(x=>x.id===id);
+  if(!f){try{const d=await db.collection('files').doc(id).get();if(d.exists)f={id,...d.data()};}catch(e){}}
+  if(!f){toast('ファイルが見つかりません。削除された可能性があります');return;}
+  toast('読み込み中…');
+  let b;
+  try{b=await fetchFileBlob(f);}catch(e){console.warn(e);toast('ファイルを開けませんでした。通信状況を確認してください');return;}
+  const url=URL.createObjectURL(b);
+  if(!save&&fileKind(f.name,f.type)==='image'){
+    openSheet(`<div class="about"><h2 style="overflow-wrap:anywhere">${esc(f.name)}</h2><img class="fpreview" src="${url}" alt="">
+      <div class="actions"><span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button><button type="button" class="btn primary" data-fsave="${esc(f.id)}">端末に保存</button></div></div>`);
+    return;
+  }
+  const a=document.createElement('a');a.href=url;a.download=f.name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),120000);
+  $('#toast').hidden=true;
+}
+async function deleteFile(id){
+  const f=S.files.find(x=>x.id===id);if(!f)return;
+  try{
+    const cs=await db.collection('files').doc(id).collection('chunks').get();
+    for(const d of cs.docs)await d.ref.delete();
+    await db.collection('files').doc(id).delete();
+    toast('削除しました');
+  }catch(e){fail(e);}
+}
+const canManage=o=>!!S.me.id&&(o.by===S.me.id||isBoard());
+const folderByName=n=>S.folders.find(f=>(f.name||'').trim()===(n||'').trim());
+async function ensureFolder(name){
+  const hit=folderByName(name);if(hit)return hit.id;
+  const ref=await db.collection('folders').add({name:name.trim().slice(0,40),color:FOLDER_COLORS[S.folders.length%FOLDER_COLORS.length],by:S.me.id,createdAt:Date.now(),updatedAt:Date.now()});
+  return ref.id;
+}
+// 報告の本文から「〇〇フォルダに保存」を見つける
+function folderFromText(t){
+  const m=(t||'').match(/[「『"]?([^\s「」『』"@、。,]{1,30}?)[」』"]?\s*(?:の)?フォルダ(?:ー)?\s*(?:に|へ)\s*(?:保存|入れ|格納|アップ)/);
+  return m?m[1]:'';
+}
+function folderSheet(id){
+  const f=id?S.folders.find(x=>x.id===id):null;if(id&&!f)return;
+  let col=(f&&f.color)||FOLDER_COLORS[S.folders.length%FOLDER_COLORS.length];
+  const cnt=f?S.files.filter(x=>x.folderId===f.id).length:0;
+  openSheet(`<form id="f"><h2>${f?'フォルダを編集':'新しいフォルダ'}</h2>
+    <label class="fld">フォルダ名<input id="fdN" maxlength="40" required value="${esc(f?f.name:'')}" placeholder="例：取締役会の議事録"></label>
+    <div class="fld">色<div class="swatches" id="fdC">${FOLDER_COLORS.map(c=>`<button type="button" data-col="${c}" class="${c===col?'on':''}" style="--sw:${c}" aria-label="色 ${c}">${OK_SVG}</button>`).join('')}</div></div>
+    ${f&&cnt?`<p class="hint" style="margin:0">中に${cnt}件のファイルがあるため、フォルダは削除できません。先にファイルを削除してください。</p>`:''}
+    <div class="actions">${f&&!cnt&&canManage(f)?'<button type="button" class="btn danger" id="fDel">削除</button>':''}<span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button><button class="btn primary" type="submit">${f?'保存':'作成'}</button></div></form>`);
+  $('#fdC').addEventListener('click',e=>{const b=e.target.closest('[data-col]');if(!b)return;col=b.dataset.col;$('#fdC').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
+  armDelete($('#fDel'),async()=>{closeSheet();try{await db.collection('folders').doc(id).delete();S.folderOpen=null;toast('フォルダを削除しました');paint();}catch(e){fail(e);}});
+  $('#f').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const name=$('#fdN').value.trim();if(!name)return;
+    const dup=folderByName(name);if(dup&&dup.id!==id){toast('同じ名前のフォルダがすでにあります');return;}
+    closeSheet();
+    try{
+      if(f){await db.collection('folders').doc(id).update({name,color:col,updatedAt:Date.now()});toast('フォルダを更新しました');}
+      else{const ref=await db.collection('folders').add({name,color:col,by:S.me.id,createdAt:Date.now(),updatedAt:Date.now()});S.folderOpen=ref.id;toast(`「${name}」を作成しました`);}
+      paint();
+    }catch(err){fail(err);}
+  });
+  setTimeout(()=>$('#fdN')&&$('#fdN').focus(),60);
+}
+function pickFiles(cb){
+  const inp=document.createElement('input');inp.type='file';inp.multiple=true;
+  inp.onchange=()=>{const fs=[...(inp.files||[])];if(fs.length)cb(fs);};
+  inp.click();
+}
+const FOLDER_SVG=c=>`<svg viewBox="0 0 32 26" aria-hidden="true"><path d="M2 4.5A2.5 2.5 0 0 1 4.5 2h7.2l3 3.2h12.8A2.5 2.5 0 0 1 30 7.7v14.8a2.5 2.5 0 0 1-2.5 2.5h-23A2.5 2.5 0 0 1 2 22.5z" fill="${c}"/><path d="M2 9h28v13.5a2.5 2.5 0 0 1-2.5 2.5h-23A2.5 2.5 0 0 1 2 22.5z" fill="${c}" opacity=".78"/></svg>`;
+function fileRow(f,showFolder){
+  const k=KINDS[fileKind(f.name,f.type)]||KINDS.other,fd=showFolder?S.folders.find(x=>x.id===f.folderId):null;
+  const saved=f.origSize&&f.origSize>f.size*1.05?`<span class="shrink">元 ${fmtSize(f.origSize)}</span>`:'';
+  return `<div class="frow"><button type="button" class="fmain" data-fopen="${esc(f.id)}"><span class="fk" style="--fk:${k[1]}">${k[0]}</span>
+    <span class="fmt"><b>${esc(f.name)}</b><span>${fmtSize(f.size)}${saved}・${esc(pname(f.by))}・${fmtDate(f.createdAt)}${fd?`・${esc(fd.name)}`:''}</span></span></button>
+    <button type="button" class="x" data-fsave="${esc(f.id)}" aria-label="端末に保存"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg></button>
+    ${canManage(f)?`<button type="button" class="x" data-fdel="${esc(f.id)}" aria-label="削除">${XIC}</button>`:''}</div>`;
+}
+function docsBody(){
+  const q=(S.docsQ||'').trim().toLowerCase();
+  if(q){
+    const hits=S.files.filter(f=>(f.name||'').toLowerCase().includes(q)||(f.origName||'').toLowerCase().includes(q));
+    const fh=S.folders.filter(f=>(f.name||'').toLowerCase().includes(q));
+    return `${fh.length?`<div class="fgrid">${fh.map(folderCard).join('')}</div>`:''}
+      <div class="flist">${hits.length?hits.map(f=>fileRow(f,true)).join(''):''}</div>${!hits.length&&!fh.length?empty('見つかりませんでした'):''}`;
+  }
+  const fs=S.folders.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  const recent=S.files.slice(0,5);
+  return `${fs.length?`<div class="fgrid">${fs.map(folderCard).join('')}</div>`:empty('まだフォルダがありません','右下の「フォルダを作成」から作れます')}
+    ${recent.length?`<section class="sec"><div class="sec-h"><h2>最近追加された資料</h2></div><div class="flist">${recent.map(f=>fileRow(f,true)).join('')}</div></section>`:''}`;
+}
+function folderCard(f){
+  const items=S.files.filter(x=>x.folderId===f.id),size=items.reduce((a,x)=>a+(x.size||0),0);
+  return `<button type="button" class="fcard" data-fold="${esc(f.id)}">${FOLDER_SVG(f.color||'#FFA41B')}<b>${esc(f.name)}</b><span>${items.length}件${items.length?`・${fmtSize(size)}`:''}</span></button>`;
+}
+function folderView(){
+  const f=S.folders.find(x=>x.id===S.folderOpen);
+  if(!f){S.folderOpen=null;return VIEWS.docs();}
+  const items=S.files.filter(x=>x.folderId===f.id);
+  return `<div class="fhead"><button type="button" class="icon-btn" data-foldback aria-label="フォルダ一覧に戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m14.5 6-6 6 6 6"/></svg></button>
+    <span class="fic">${FOLDER_SVG(f.color||'#FFA41B')}</span><h1 class="pg" style="margin:0;flex:1;min-width:0;overflow-wrap:anywhere">${esc(f.name)}</h1>
+    ${canManage(f)?`<button type="button" class="btn ghost" data-foldedit="${esc(f.id)}" style="padding:7px 12px;font-size:13px">編集</button>`:''}</div>
+    <p class="hint" style="margin:4px 0 14px">作成：${esc(pname(f.by))}・写真は自動で軽く変換して保存されます（1ファイル15MBまで）</p>
+    ${items.length?`<div class="flist">${items.map(x=>fileRow(x,false)).join('')}</div>`:empty('まだ資料がありません','右下の「ファイルを追加」から保存できます')}`;
+}
+
 /* ---------- morning notifications ---------- */
 // 公開用のウェブプッシュ鍵（Firebase の Cloud Messaging 設定で作成した場合だけ入れる。空なら既定の鍵を使う）
 const VAPID_KEY='';
@@ -1306,7 +1573,8 @@ function start(u){
       sub('tasks',db.collection('tasks'));
       sub('reports',db.collection('reports').orderBy('createdAt','desc').limit(300));
       sub('events',db.collection('events'));
-      sub('todos',db.collection(colPath('todos')));
+      sub('folders',db.collection('folders'));
+      sub('files',db.collection('files').orderBy('createdAt','desc').limit(500));
       unsubs.push(db.collection('feedback').where('uid','==',u.uid).onSnapshot(fs=>{S.myFb=fs.docs.map(d=>({id:d.id,...d.data()}));},()=>{}));
       S.loaded=true;
       checkPush().then(()=>{schedule();refreshPush();});
