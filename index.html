@@ -1,9 +1,16 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <title>EntreBrew Daily</title>
 <meta name="theme-color" content="#FFA41B">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EB Daily">
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
 </head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -277,6 +284,15 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .hbtn svg{width:20px;height:20px}
 .hdot{position:absolute;top:6px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--cherry);border:2px solid var(--surface2)}
 .upd{background:var(--accent-soft);border-radius:var(--r);padding:14px 16px;display:grid;gap:8px;margin-bottom:16px}
+.ntf{background:var(--surface2);border-radius:14px;padding:12px 14px;display:grid;gap:10px}
+.ntf-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ntf-row select{flex:1;min-width:120px;font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:9px 10px}
+.ntf-row .btn{padding:9px 16px;font-size:14px}
+.ntf-home{background:var(--sky-soft);margin-bottom:16px;padding:14px 16px}
+.ntf-home b{font-family:var(--font-d);font-weight:800;font-size:16px;color:var(--ink)}
+.ntf-home p{margin:0;font-size:13.5px;color:var(--muted)}
+.ntf-home .actions{margin-top:0}
+.ntf-home .btn{padding:8px 14px;font-size:13.5px}
 .upd-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .upd-h b{font-family:var(--font-d);font-weight:800;font-size:16px;color:var(--accent-ink)}
 .ver{font-size:12px;font-weight:700;color:var(--accent-ink);font-variant-numeric:tabular-nums;opacity:.85}
@@ -397,15 +413,20 @@ const PLUS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 const STATUS={todo:'未着手',doing:'進行中',done:'完了'};
 const NEXT={todo:'doing',doing:'done',done:'todo'};
 const CAT={'日報':'c-day','連絡':'c-note','共有':'c-share'};
-const DEPTS=['取締役会','経営管理部総務部','経営管理部経理部','国際事業部','営業部','マーケティング部','EC部','商品部','店舗運営部'];
+const DEPTS=['取締役会','経営管理総務部','経営管理経理部','国際事業部','営業部','マーケティング部','EC部','商品部','店舗運営部'];
 const BOARD='取締役会';
-const DC={'取締役会':'#E08A12','経営管理部総務部':'#5B6CE0','経営管理部経理部':'#7A4FD0','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
+const DC={'取締役会':'#E08A12','経営管理総務部':'#5B6CE0','経営管理経理部':'#7A4FD0','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
 const CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"/></svg>';
+// 旧い部署名で保存されたデータを新しい名前に読み替える
+const DEPT_ALIAS={'経営管理部総務部':'経営管理総務部','経営管理部経理部':'経営管理経理部'};
+const normDept=d=>DEPT_ALIAS[d]||d;
+const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.4.0';
+const APP_VERSION='1.5.0';
 const CHANGELOG=[
-  {v:'1.4.0',date:'2026-09-28',items:['経営管理部を「経営管理部総務部」と「経営管理部経理部」に分けました（該当の方はプロフィールで部署を選び直してください）','取締役会のメンバーには、すべての部署あての連絡とタスクが届くようになりました','タスクの担当に「部門」タブを追加し、部門ごとに割り当てられるようになりました','予定に担当者・担当部門・タブカラーを設定できるようになりました']},
+  {v:'1.5.0',date:'2026-09-28',items:['毎朝、その日のタスク・予定・未確認の連絡をお知らせする通知を追加（右上のベルからオンにできます）','部署名を「経営管理総務部」「経営管理経理部」に変更','ホーム画面に追加すると、専用のアイコンで起動できるようになりました']},
+  {v:'1.4.0',date:'2026-09-28',items:['経営管理部を総務部と経理部に分けました（該当の方はプロフィールで部署を選び直してください）','タスクの担当に「部門」タブを追加し、部門ごとに割り当てられるようになりました','予定に担当者・担当部門・タブカラーを設定できるようになりました']},
   {v:'1.3.0',date:'2026-09-27',items:['自分のアカウント（Google またはメールアドレス）でログインして使えるようになりました','大学のメールアドレス（s＋数字6桁）ならすぐに参加できます','プロフィールで表示名を変えられるようになりました']},
   {v:'1.2.0',date:'2026-09-27',items:['アップデートのお知らせと更新履歴を追加','アプリから不具合・要望を送れる「フィードバック」を追加']},
   {v:'1.1.0',date:'2026-09-27',items:['部署ごとのまとめてメンション（@EC部 など）','初回の所属部署登録とプロフィール（誕生日・事業にかける思い）','組織図タブを追加','ホームとカレンダーに誕生日を表示']},
@@ -468,6 +489,7 @@ function isToMe(r){
   const me=S.me.id;if(!me)return false;
   if((r.mentions||[]).includes(me))return true;
   if(r.author===me)return false;
+  if(isBoard()&&(r.mentions||[]).length)return true;
   return deptHitsMe(r.depts);
 }
 // 取締役会のメンバーは、どの部署あての通知・タスクも自分あてとして受け取る（進捗管理のため）
@@ -594,7 +616,7 @@ function taskCard(t){
     </div></div>`;
 }
 function richBody(b){
-  return esc(b).replace(/@\{g:([^}]{1,20})\}/g,(_,d)=>`<span class="mention grp ${deptHitsMe([d])?'me':''}">@${d}</span>`)
+  return esc(b).replace(/@\{g:([^}]{1,20})\}/g,(_,d0)=>{const d=normDept(d0);return `<span class="mention grp ${deptHitsMe([d])?'me':''}">@${d}</span>`;})
     .replace(/@\{([A-Za-z0-9_\-.~:+]+)\}/g,(_,id)=>`<span class="mention ${id===S.me.id?'me':''}">@${esc(pname(id))}</span>`).replace(/\n/g,'<br>');
 }
 function reportCard(r){
@@ -648,7 +670,7 @@ home(){
   const todoT=S.todos.filter(x=>!x.done&&x.due&&x.due<=t).sort(byDue);
   const latest=sortedReports().filter(r=>!ment.includes(r)).slice(0,3);
   const bdays=upcomingBdays(7);
-  return `${roNote()}${unseen()?updCard():''}<section class="hero">
+  return `${roNote()}${unseen()?updCard():''}${pushPromptHtml()}<section class="hero">
     <p class="hero-date">${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${W[d.getDay()]}）</p>
     <h1>${greet}${nm?`、<br>${esc(nm)}さん`:''}</h1>
     ${myDepts().length?`<div class="dps">${myDepts().map(dpill).join('')}</div>`:(S.me.id&&S.membersLoaded?'<div><button type="button" class="dp" data-myprof style="border:0;padding:4px 12px">所属部署を登録する</button></div>':'')}
@@ -970,10 +992,16 @@ function aboutSheet(){
     ${S.canWrite?'<button type="button" class="btn primary" data-fb>不具合・要望を送る</button>':''}
     ${fb.length?`<h3>送った不具合・要望</h3><div class="fb-list">${fb.map(f=>`<div class="fb-item"><div class="fb-h"><span class="pill ${FB_ST[f.status]||'s-new'}">${esc(f.status||'受付')}</span><span>${esc(f.type)}</span><span>${ago(f.createdAt)}</span></div>
       <p>${esc(f.text)}</p>${f.reply?`<div class="fb-reply">${esc(f.reply)}</div>`:''}</div>`).join('')}</div>`:''}
+    ${S.me.id&&!S.preview?pushSectionHtml():''}
     <h3>更新履歴</h3>
     <div class="log">${CHANGELOG.map(c=>`<div><div class="log-v"><span>v${c.v}</span><span class="d">${c.date.replace(/-/g,'/')}</span></div><ul>${c.items.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`).join('')}</div>
     ${auth&&auth.currentUser?`<p class="intro">ログイン中：${esc(auth.currentUser.email||'')}</p>`:''}
     <div class="actions">${auth&&auth.currentUser?'<button type="button" class="btn danger" data-logout>ログアウト</button>':''}<span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button></div></div>`);
+  const hs=$('#pushHour');
+  if(hs&&pushState()==='on')hs.onchange=async()=>{
+    const h=Number(hs.value);
+    try{await saveToken(h);toast(`毎朝${h}時ごろに変更しました`);}catch(e){console.warn(e);toast('時刻を変更できませんでした。もう一度お試しください');}
+  };
 }
 function feedbackSheet(){
   let type='不具合';
@@ -1021,10 +1049,13 @@ function setView(v){
 
 /* ---------- events ---------- */
 document.addEventListener('click',async e=>{
-  if(e.target.closest('[data-logout]')){closeSheet();if(auth)auth.signOut();return;}
-  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],#fab');
+  if(e.target.closest('[data-logout]')){closeSheet();if(pushGet())await disablePush(true);if(auth)auth.signOut();return;}
+  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],#fab');
   if(!g){if(e.target.id==='back')closeSheet();return;}
   const ds=g.dataset;
+  if('pushon' in ds){const hs=$('#pushHour');g.disabled=true;await enablePush(hs?Number(hs.value):7);g.disabled=false;refreshPushUi();return;}
+  if('pushoff' in ds){await disablePush(false);refreshPushUi();return;}
+  if('pushdismiss' in ds){try{localStorage.setItem('eb-push-dismiss','1');}catch(e){}paint();return;}
   if('about' in ds){aboutSheet();return;}
   if('seen' in ds){markSeen();paint();return;}
   if('fb' in ds){feedbackSheet();return;}
@@ -1068,7 +1099,7 @@ function sample(){
   S.P={me:{name:'安藤',color:'#E08A12'},u2:{name:'田中',color:'#15A36A'},u3:{name:'佐藤',color:'#2872D9'},u4:{name:'山本',color:'#9B5DE5'},u5:{name:'鈴木',color:'#1C9BB8'}};
   const t=today(),now=Date.now();
   S.members={
-    me:{depts:['取締役会','経営管理部'],birthday:'03-14',passion:'一杯のコーヒーから、地域とお客さまの毎日を少しずつ明るくしていきたい。'},
+    me:{depts:['取締役会','経営管理総務部'],birthday:'03-14',passion:'一杯のコーヒーから、地域とお客さまの毎日を少しずつ明るくしていきたい。'},
     u2:{depts:['EC部','マーケティング部'],birthday:t.slice(5),passion:'オンラインでも、お店で飲むときと同じワクワクを届けたいです。'},
     u3:{depts:['店舗運営部','営業部'],birthday:plusDays(5).slice(5),passion:'常連さんが「ここに来ると落ち着く」と言ってくれる店をつくる。'},
     u4:{depts:['商品部'],birthday:'11-02',passion:''},
@@ -1173,6 +1204,87 @@ function gateDenied(u){
   $('#gOut').onclick=()=>auth.signOut();
 }
 
+/* ---------- morning notifications ---------- */
+// 公開用のウェブプッシュ鍵（Firebase の Cloud Messaging 設定で作成した場合だけ入れる。空なら既定の鍵を使う）
+const VAPID_KEY='';
+const NOTIFY_HOURS=[6,7,8,9];
+let msgReg=null,messagingObj=null,pushSupported=null;
+const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const isStandalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;}catch(e){return false;}};
+function pushGet(){try{return JSON.parse(localStorage.getItem('eb-push')||'null');}catch(e){return null;}}
+function pushSet(v){try{if(v)localStorage.setItem('eb-push',JSON.stringify(v));else localStorage.removeItem('eb-push');}catch(e){}}
+async function checkPush(){
+  try{pushSupported=!!(window.firebase&&firebase.messaging&&'serviceWorker' in navigator&&'Notification' in window&&await firebase.messaging.isSupported());}
+  catch(e){pushSupported=false;}
+  return pushSupported;
+}
+function pushState(){
+  if(pushSupported===null)return 'loading';
+  if(!pushSupported)return (isIOS&&!isStandalone())?'ios-home':'unsupported';
+  if(Notification.permission==='denied')return 'blocked';
+  const p=pushGet();return p&&p.token&&Notification.permission==='granted'?'on':'off';
+}
+async function getMessaging(){
+  if(messagingObj)return messagingObj;
+  msgReg=await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+  messagingObj=firebase.messaging();
+  messagingObj.onMessage(p=>{const n=p.notification||{};toast(n.title?`${n.title}　${(n.body||'').split('\n')[0]}`:'新しいお知らせがあります');});
+  return messagingObj;
+}
+async function saveToken(hour){
+  const m=await getMessaging();
+  const opts={serviceWorkerRegistration:msgReg};if(VAPID_KEY)opts.vapidKey=VAPID_KEY;
+  const token=await m.getToken(opts);
+  if(!token)throw new Error('no-token');
+  const old=pushGet();
+  if(old&&old.token&&old.token!==token){try{await db.collection('pushTokens').doc(old.token).delete();}catch(e){}}
+  await db.collection('pushTokens').doc(token).set({uid:S.me.id,email:(auth.currentUser&&auth.currentUser.email)||'',hour,ua:navigator.userAgent.slice(0,160),updatedAt:Date.now()});
+  pushSet({token,hour});
+}
+async function enablePush(hour){
+  let perm=Notification.permission;
+  if(perm==='default')perm=await Notification.requestPermission();
+  if(perm!=='granted'){toast(perm==='denied'?'通知がブロックされています。端末の設定で許可してください':'通知は許可されませんでした');return false;}
+  try{await saveToken(hour);toast(`毎朝${hour}時ごろに通知が届きます`);return true;}
+  catch(e){console.warn(e);toast(e&&e.code==='permission-denied'?'通知の設定を保存できませんでした。管理者に連絡してください':'通知をオンにできませんでした。もう一度お試しください');return false;}
+}
+async function disablePush(silent){
+  const p=pushGet();
+  if(p&&p.token){
+    try{await db.collection('pushTokens').doc(p.token).delete();}catch(e){}
+    try{const m=await getMessaging();await m.deleteToken();}catch(e){}
+  }
+  pushSet(null);if(!silent)toast('毎朝の通知をオフにしました');
+}
+async function refreshPush(){
+  if(pushState()!=='on')return;
+  try{await saveToken(pushGet().hour||7);}catch(e){console.warn(e);}
+}
+function pushSectionHtml(){
+  const st=pushState(),p=pushGet(),hr=(p&&p.hour)||7;
+  const msg={
+    on:`オンです。毎朝${hr}時ごろに、その日のタスク・予定・未確認の連絡をお知らせします。`,
+    off:'オンにすると、毎朝その日のタスク・予定・未確認の連絡をお知らせします。',
+    blocked:'通知がブロックされています。端末（ブラウザ）の設定で、このアプリの通知を許可してから開き直してください。',
+    'ios-home':'iPhoneでは、Safariの共有ボタンから「ホーム画面に追加」し、追加したアイコンから開くと通知をオンにできます。',
+    unsupported:'このブラウザは通知に対応していません。スマホはホーム画面に追加したアイコンから、パソコンはChromeかEdgeで開いてください。',
+    loading:'確認中…'}[st];
+  const sel=`<select id="pushHour" aria-label="通知の時刻">${NOTIFY_HOURS.map(h=>`<option value="${h}" ${h===hr?'selected':''}>毎朝 ${h}:00ごろ</option>`).join('')}</select>`;
+  return `<h3>毎朝の通知</h3><div class="ntf"><p class="intro">${msg}</p>${st==='on'||st==='off'?`<div class="ntf-row">${sel}${st==='on'?'<button type="button" class="btn ghost" data-pushoff>オフにする</button>':'<button type="button" class="btn primary" data-pushon>オンにする</button>'}</div>`:''}</div>`;
+}
+function pushPromptHtml(){
+  if(!S.me.id||S.preview||!S.loaded)return '';
+  let dis=false;try{dis=localStorage.getItem('eb-push-dismiss')==='1';}catch(e){}
+  if(dis)return '';
+  const st=pushState();
+  const body=st==='off'&&Notification.permission==='default'?'その日のタスク・予定・未確認の連絡を、毎朝7時ごろにお知らせします。時刻は右上のベルから変えられます。'
+    :st==='ios-home'?'Safariの共有ボタンから「ホーム画面に追加」して、追加したアイコンから開くと、毎朝の通知を受け取れます。':'';
+  if(!body)return '';
+  return `<section class="ntf ntf-home" aria-label="毎朝の通知"><b>毎朝の通知を受け取りませんか？</b><p>${body}</p>
+    <div class="actions"><button type="button" class="btn ghost" data-pushdismiss>${st==='off'?'あとで':'閉じる'}</button><span class="sp"></span>${st==='off'?'<button type="button" class="btn primary" data-pushon>オンにする</button>':''}</div></section>`;
+}
+function refreshPushUi(){if(!$('#back').hidden&&$('#sheet .about'))aboutSheet();else paint();}
+
 /* ---------- boot ---------- */
 function watch(q,ok){
   unsubs.push(q.onSnapshot(ok,e=>{
@@ -1180,13 +1292,13 @@ function watch(q,ok){
     else toast('データを読み込めませんでした。ページを開き直してください');
   }));
 }
-function sub(k,q){watch(q,s=>{S[k]=s.docs.map(d=>({id:d.id,...d.data()}));schedule();});}
+function sub(k,q){watch(q,s=>{S[k]=s.docs.map(d=>{const o={id:d.id,...d.data()};if(o.depts)o.depts=normDepts(o.depts);return o;});schedule();});}
 function start(u){
   S.me={id:u.uid,name:u.displayName||(u.email||'').split('@')[0],avatarUrl:u.photoURL||'',color:colorFor(u.uid)};
   S.P[u.uid]={name:S.me.name,avatarUrl:S.me.avatarUrl,color:S.me.color};
   let first=true;
   watch(db.collection('members'),s=>{
-    const m={};s.docs.forEach(d=>{const x=d.data();m[d.id]=x;S.P[d.id]={name:x.name||'',avatarUrl:x.avatarUrl||'',color:x.color||colorFor(d.id)};});
+    const m={};s.docs.forEach(d=>{const x=d.data();if(x.depts)x.depts=normDepts(x.depts);m[d.id]=x;S.P[d.id]={name:x.name||'',avatarUrl:x.avatarUrl||'',color:x.color||colorFor(d.id)};});
     S.members=m;
     const mine=m[u.uid];if(mine&&mine.name)S.me.name=mine.name;
     if(first){
@@ -1197,6 +1309,7 @@ function start(u){
       sub('todos',db.collection(colPath('todos')));
       unsubs.push(db.collection('feedback').where('uid','==',u.uid).onSnapshot(fs=>{S.myFb=fs.docs.map(d=>({id:d.id,...d.data()}));},()=>{}));
       S.loaded=true;
+      checkPush().then(()=>{schedule();refreshPush();});
     }
     if(!s.metadata.fromCache&&!S.membersLoaded){S.membersLoaded=true;setTimeout(maybeOnboard,300);}
     schedule();

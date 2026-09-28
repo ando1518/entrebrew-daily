@@ -1,0 +1,6 @@
+// Firestore のルールに追加する部分（毎朝の通知の登録用）
+// 「match /databases/{database}/documents {」の内側に貼り付けてください。
+    match /pushTokens/{token} {
+      allow create, update: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
