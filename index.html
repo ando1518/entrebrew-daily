@@ -160,7 +160,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .dot.tk{background:var(--leaf)}
 .legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:8px;padding-left:4px}
 .legend span{display:inline-flex;align-items:center;gap:5px}
-.evrow{display:flex;gap:12px;align-items:center;cursor:pointer}
+.evrow{display:flex;gap:12px;align-items:center;cursor:pointer;border-left:6px solid var(--ec,var(--accent))}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.swatches button{width:34px;height:34px;border-radius:50%;border:0;background:var(--sw);padding:0;display:grid;place-items:center;color:#fff}
+.swatches button svg{width:16px;height:16px;display:none}
+.swatches button.on{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--sw)}
+.swatches button.on svg{display:block}
+.pane-hint{font-size:12px;color:var(--muted);font-weight:400;margin:0}
 .ev-time{flex:none;width:52px;font-family:var(--font-d);font-weight:800;font-size:15px;color:var(--accent-ink);font-variant-numeric:tabular-nums}
 .ev-body{flex:1;min-width:0}
 .ev-body b{display:block;overflow-wrap:anywhere}
@@ -391,13 +397,15 @@ const PLUS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 const STATUS={todo:'未着手',doing:'進行中',done:'完了'};
 const NEXT={todo:'doing',doing:'done',done:'todo'};
 const CAT={'日報':'c-day','連絡':'c-note','共有':'c-share'};
-const DEPTS=['取締役会','経営管理部','国際事業部','営業部','マーケティング部','EC部','商品部','店舗運営部'];
-const DC={'取締役会':'#E08A12','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
+const DEPTS=['取締役会','経営管理部総務部','経営管理部経理部','国際事業部','営業部','マーケティング部','EC部','商品部','店舗運営部'];
+const BOARD='取締役会';
+const DC={'取締役会':'#E08A12','経営管理部総務部':'#5B6CE0','経営管理部経理部':'#7A4FD0','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
 const CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"/></svg>';
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.3.0';
+const APP_VERSION='1.4.0';
 const CHANGELOG=[
+  {v:'1.4.0',date:'2026-09-28',items:['経営管理部を「経営管理部総務部」と「経営管理部経理部」に分けました（該当の方はプロフィールで部署を選び直してください）','取締役会のメンバーには、すべての部署あての連絡とタスクが届くようになりました','タスクの担当に「部門」タブを追加し、部門ごとに割り当てられるようになりました','予定に担当者・担当部門・タブカラーを設定できるようになりました']},
   {v:'1.3.0',date:'2026-09-27',items:['自分のアカウント（Google またはメールアドレス）でログインして使えるようになりました','大学のメールアドレス（s＋数字6桁）ならすぐに参加できます','プロフィールで表示名を変えられるようになりました']},
   {v:'1.2.0',date:'2026-09-27',items:['アップデートのお知らせと更新履歴を追加','アプリから不具合・要望を送れる「フィードバック」を追加']},
   {v:'1.1.0',date:'2026-09-27',items:['部署ごとのまとめてメンション（@EC部 など）','初回の所属部署登録とプロフィール（誕生日・事業にかける思い）','組織図タブを追加','ホームとカレンダーに誕生日を表示']},
@@ -453,15 +461,30 @@ async function searchPeople(q){
   return hits.slice(0,10);
 }
 const memberOf=id=>(id&&S.members[id])||null;
-const myDepts=()=>(memberOf(S.me.id)||{}).depts||[];
+const myDepts=()=>((memberOf(S.me.id)||{}).depts||[]).filter(d=>DEPTS.includes(d));
 const byName=(a,b)=>pname(a).localeCompare(pname(b),'ja');
 const deptMembers=d=>Object.keys(S.members).filter(id=>(S.members[id].depts||[]).includes(d)).sort(byName);
 function isToMe(r){
   const me=S.me.id;if(!me)return false;
   if((r.mentions||[]).includes(me))return true;
   if(r.author===me)return false;
-  const md=myDepts();return (r.depts||[]).some(d=>md.includes(d));
+  return deptHitsMe(r.depts);
 }
+// 取締役会のメンバーは、どの部署あての通知・タスクも自分あてとして受け取る（進捗管理のため）
+const isBoard=()=>myDepts().includes(BOARD);
+function deptHitsMe(ds){
+  if(!ds||!ds.length)return false;
+  if(isBoard())return true;
+  const md=myDepts();return ds.some(d=>md.includes(d));
+}
+const isMyTask=t=>!!S.me.id&&(t.assignee===S.me.id||deptHitsMe(t.depts));
+const OK_SVG='<svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+const deptPickHtml=(id,sel)=>`<div class="dept-pick" id="${id}">${DEPTS.map(d=>`<button type="button" data-d="${esc(d)}" class="${sel.has(d)?'on':''}" style="--dc:${DC[d]}" aria-pressed="${sel.has(d)}">${esc(d)}${OK_SVG}</button>`).join('')}</div>`;
+function bindDeptPick(el,sel){
+  el.addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;const d=b.dataset.d;
+    if(sel.has(d))sel.delete(d);else sel.add(d);b.classList.toggle('on',sel.has(d));b.setAttribute('aria-pressed',sel.has(d));});
+}
+const EV_COLORS=['#FFA41B','#DC3F47','#C2459E','#7A4FD0','#2872D9','#1C9BB8','#15A36A','#9A7433'];
 function upcomingBdays(days){
   const now=parse(today()),res=[];
   for(const [id,m] of Object.entries(S.members)){
@@ -526,7 +549,7 @@ let raf=0;
 function schedule(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;render();});}
 function render(){paint();}
 function myMentions(){return S.me.id?S.reports.filter(r=>isToMe(r)&&!(r.acks||{})[S.me.id]):[];}
-function myOpenTasks(){return S.tasks.filter(t=>t.assignee&&t.assignee===S.me.id&&t.status!=='done').sort(byDue);}
+function myOpenTasks(){return S.tasks.filter(t=>t.status!=='done'&&isMyTask(t)).sort(byDue);}
 function sortedReports(){return S.reports.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));}
 
 function paint(){
@@ -567,12 +590,11 @@ function taskCard(t){
     <div class="t-main" data-task="${esc(t.id)}" role="button" tabindex="0">
       <b>${esc(t.title)}</b>
       <div class="t-meta"><span class="pill p-${s}">${STATUS[s]}</span>${dueChip(t.due,s==='done')}
-      ${t.assignee?`<span class="who-sm">${av(t.assignee,'sm')}${esc(pname(t.assignee))}</span>`:''}</div>
+      ${t.assignee?`<span class="who-sm">${av(t.assignee,'sm')}${esc(pname(t.assignee))}</span>`:''}${(t.depts||[]).map(dpill).join('')}</div>
     </div></div>`;
 }
 function richBody(b){
-  const md=myDepts();
-  return esc(b).replace(/@\{g:([^}]{1,20})\}/g,(_,d)=>`<span class="mention grp ${md.includes(d)?'me':''}">@${d}</span>`)
+  return esc(b).replace(/@\{g:([^}]{1,20})\}/g,(_,d)=>`<span class="mention grp ${deptHitsMe([d])?'me':''}">@${d}</span>`)
     .replace(/@\{([A-Za-z0-9_\-.~:+]+)\}/g,(_,id)=>`<span class="mention ${id===S.me.id?'me':''}">@${esc(pname(id))}</span>`).replace(/\n/g,'<br>');
 }
 function reportCard(r){
@@ -593,8 +615,10 @@ function reportCard(r){
     </div></article>`;
 }
 function eventRow(e){
-  return `<div class="card evrow" data-ev="${esc(e.id)}" role="button" tabindex="0"><span class="ev-time">${esc(e.time||'終日')}</span>
-    <div class="ev-body"><b>${esc(e.title)}</b>${e.memo?`<span>${esc(e.memo)}</span>`:''}</div></div>`;
+  const who=e.assignee?`<span class="who-sm">${av(e.assignee,'sm')}${esc(pname(e.assignee))}</span>`:'';
+  const ds=(e.depts||[]).map(dpill).join('');
+  return `<div class="card evrow" data-ev="${esc(e.id)}" role="button" tabindex="0" style="--ec:${esc(e.color||'var(--accent)')}"><span class="ev-time">${esc(e.time||'終日')}</span>
+    <div class="ev-body"><b>${esc(e.title)}</b>${e.memo?`<span>${esc(e.memo)}</span>`:''}${who||ds?`<div class="t-meta">${who}${ds}</div>`:''}</div></div>`;
 }
 
 /* views */
@@ -648,8 +672,8 @@ home(){
 tasks(){
   const f=S.taskFilter;
   const open=S.tasks.filter(t=>t.status!=='done'),done=S.tasks.filter(t=>t.status==='done');
-  const mineN=open.filter(t=>t.assignee===S.me.id).length;
-  let list=f==='done'?done.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)):(f==='all'?open:open.filter(t=>t.assignee===S.me.id)).slice().sort((a,b)=>byDue(a,b)||((b.status==="doing")-(a.status==="doing")));
+  const mineN=open.filter(isMyTask).length;
+  let list=f==='done'?done.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)):(f==='all'?open:open.filter(isMyTask)).slice().sort((a,b)=>byDue(a,b)||((b.status==="doing")-(a.status==="doing")));
   const seg=[['mine','自分',mineN],['all','全員',open.length],['done','完了',done.length]]
     .map(([k,l,n])=>`<button type="button" data-tf="${k}" class="${f===k?'on':''}">${l}<span class="ct">${n}</span></button>`).join('');
   return `${roNote()}<h1 class="pg">タスク</h1><div class="seg" role="tablist">${seg}</div>${loading()}
@@ -669,13 +693,13 @@ calendar(){
   const m=S.calMonth,y=m.getFullYear(),mo=m.getMonth();
   const first=new Date(y,mo,1),dim=new Date(y,mo+1,0).getDate(),weeks=Math.ceil((first.getDay()+dim)/7);
   const t=today(),evBy={},tkBy={};
-  S.events.forEach(e=>{evBy[e.date]=(evBy[e.date]||0)+1;});
+  S.events.forEach(e=>{(evBy[e.date]=evBy[e.date]||[]).push(e.color||'');});
   S.tasks.forEach(k=>{if(k.due&&k.status!=='done')tkBy[k.due]=(tkBy[k.due]||0)+1;});
   const bdBy={};Object.values(S.members).forEach(m=>{if(m.birthday)bdBy[m.birthday]=1;});
   let cells='';
   for(let i=0;i<weeks*7;i++){
     const d=new Date(y,mo,1-first.getDay()+i),s=ymd(d),w=d.getDay();
-    const dots=Array(Math.min(evBy[s]||0,2)).fill('<i class="dot ev"></i>').join('')+Array(Math.min(tkBy[s]||0,2)).fill('<i class="dot tk"></i>').join('')+(bdBy[s.slice(5)]?'<i class="dot bd"></i>':'');
+    const dots=(evBy[s]||[]).slice(0,2).map(c=>`<i class="dot ev"${c?` style="background:${esc(c)}"`:''}></i>`).join('')+Array(Math.min(tkBy[s]||0,2)).fill('<i class="dot tk"></i>').join('')+(bdBy[s.slice(5)]?'<i class="dot bd"></i>':'');
     cells+=`<button type="button" class="day ${d.getMonth()!==mo?'out':''} ${s===t?'is-today':''} ${s===S.calSel?'sel':''} ${w===0?'sun':w===6?'sat':''}" data-day="${s}" aria-label="${d.getMonth()+1}月${d.getDate()}日"><span class="n">${d.getDate()}</span><span class="dots">${dots}</span></button>`;
   }
   const sel=S.calSel,evs=S.events.filter(e=>e.date===sel).sort(byTime),tks=S.tasks.filter(k=>k.due===sel);
@@ -694,7 +718,7 @@ calendar(){
 },
 org(){
   const me=S.me.id,mm=memberOf(me),board=deptMembers('取締役会');
-  const unassigned=Object.keys(S.members).filter(id=>!(S.members[id].depts||[]).length).sort(byName);
+  const unassigned=Object.keys(S.members).filter(id=>!(S.members[id].depts||[]).some(d=>DEPTS.includes(d))).sort(byName);
   const openB=S.orgOpen.has('取締役会');
   return `${roNote()}<h1 class="pg">組織図</h1>
   ${me?`<div class="card me-card">${av(me)}<div class="mt"><b>${esc(pname(me))}</b><div class="dps">${mm&&mm.depts&&mm.depts.length?mm.depts.map(dpill).join(''):'<span class="muted" style="font-size:13px">部署が未登録です</span>'}</div></div>
@@ -770,18 +794,27 @@ function taskSheet(id){
   openSheet(`<form id="f"><h2>${t?'タスクを編集':'タスクを追加'}</h2>
     <label class="fld">タイトル<input id="fTitle" maxlength="100" required value="${esc(d.title)}" placeholder="例：新商品の仕入れ先に見積もり依頼"></label>
     <label class="fld">詳細<textarea id="fDetail" maxlength="1000" placeholder="必要なら補足を書きます">${esc(d.detail||'')}</textarea></label>
-    <div class="fld">担当者<div class="picker" id="pk"></div></div>
+    <div class="fld">担当
+      <div class="seg" id="aTab" style="margin:0"><button type="button" data-a="p" class="on">個人</button><button type="button" data-a="d">部門<span class="ct" id="aDn"></span></button></div>
+      <div class="picker" id="pk"></div>
+      <div id="aDp" hidden><p class="pane-hint">選んだ部門の全員（と取締役会）のタスクとして表示されます。複数選べます。</p>${deptPickHtml('tDp',new Set(d.depts||[]))}</div></div>
     <label class="fld">期限<input id="fDue" type="date" value="${esc(d.due||'')}"></label>
     <div class="fld">状態<div class="seg" id="fSt" style="margin:0">${Object.entries(STATUS).map(([k,l])=>`<button type="button" data-s="${k}" class="${(d.status||'todo')===k?'on':''}">${l}</button>`).join('')}</div></div>
     <div class="actions">${t&&S.canWrite?'<button type="button" class="btn danger" id="fDel">削除</button>':''}<span class="sp"></span>
       <button type="button" class="btn ghost" data-close>閉じる</button>${S.canWrite?'<button class="btn primary" type="submit">保存</button>':''}</div></form>`);
   const getA=mountPicker($('#pk'),d.assignee);
+  const tsel=new Set((d.depts||[]).filter(x=>DEPTS.includes(x)));
+  const dn=()=>{$('#aDn').textContent=tsel.size?String(tsel.size):'';};dn();
+  bindDeptPick($('#tDp'),tsel);$('#tDp').addEventListener('click',dn);
+  $('#aTab').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;
+    $('#aTab').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+    $('#pk').hidden=b.dataset.a!=='p';$('#aDp').hidden=b.dataset.a!=='d';});
   let st=d.status||'todo';
   $('#fSt').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;st=b.dataset.s;$('#fSt').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
   armDelete($('#fDel'),async()=>{closeSheet();await del('tasks',id);toast('タスクを削除しました');});
   $('#f').addEventListener('submit',async e=>{
     e.preventDefault();
-    const data={title:$('#fTitle').value.trim(),detail:$('#fDetail').value.trim(),assignee:getA()||null,due:$('#fDue').value||'',status:st,updatedAt:Date.now()};
+    const data={title:$('#fTitle').value.trim(),detail:$('#fDetail').value.trim(),assignee:getA()||null,depts:DEPTS.filter(x=>tsel.has(x)),due:$('#fDue').value||'',status:st,updatedAt:Date.now()};
     if(!data.title)return;
     closeSheet();
     const ok=t?await upd('tasks',id,data):await add('tasks',{...data,createdBy:S.me.id,createdAt:Date.now()});
@@ -854,18 +887,27 @@ function reportSheet(){
 
 function eventSheet(id,date){
   const ev=id?S.events.find(x=>x.id===id):null;if(id&&!ev)return;
-  const d=ev||{title:'',date:date||S.calSel,time:'',memo:''};
+  const d=ev||{title:'',date:date||S.calSel,time:'',memo:'',assignee:null,depts:[],color:EV_COLORS[0]};
+  let col=d.color||EV_COLORS[0];
   openSheet(`<form id="f"><h2>${ev?'予定を編集':'予定を追加'}</h2>
     <label class="fld">タイトル<input id="eT" maxlength="80" required value="${esc(d.title)}" placeholder="例：商品部ミーティング"></label>
     <div class="row2"><label class="fld">日付<input id="eD" type="date" required value="${esc(d.date)}"></label>
     <label class="fld">開始時刻<input id="eH" type="time" value="${esc(d.time||'')}"></label></div>
     <label class="fld">メモ<input id="eM" maxlength="200" value="${esc(d.memo||'')}" placeholder="場所や持ち物など"></label>
+    <div class="fld">担当者<div class="picker" id="pk"></div></div>
+    <div class="fld">担当部門<span class="pane-hint">複数選べます</span>${deptPickHtml('eDp',new Set(d.depts||[]))}</div>
+    <div class="fld">タブカラー<div class="swatches" id="eC">${EV_COLORS.map(c=>`<button type="button" data-c="${c}" class="${c===col?'on':''}" style="--sw:${c}" aria-label="色 ${c}" aria-pressed="${c===col}">${OK_SVG}</button>`).join('')}</div></div>
     <div class="actions">${ev&&S.canWrite?'<button type="button" class="btn danger" id="fDel">削除</button>':''}<span class="sp"></span>
       <button type="button" class="btn ghost" data-close>閉じる</button>${S.canWrite?'<button class="btn primary" type="submit">保存</button>':''}</div></form>`);
+  const getA=mountPicker($('#pk'),d.assignee||null);
+  const esel=new Set((d.depts||[]).filter(x=>DEPTS.includes(x)));
+  bindDeptPick($('#eDp'),esel);
+  $('#eC').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;col=b.dataset.c;
+    $('#eC').querySelectorAll('button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});});
   armDelete($('#fDel'),async()=>{closeSheet();await del('events',id);toast('予定を削除しました');});
   $('#f').addEventListener('submit',async e=>{
     e.preventDefault();
-    const data={title:$('#eT').value.trim(),date:$('#eD').value,time:$('#eH').value||'',memo:$('#eM').value.trim()};
+    const data={title:$('#eT').value.trim(),date:$('#eD').value,time:$('#eH').value||'',memo:$('#eM').value.trim(),assignee:getA()||null,depts:DEPTS.filter(x=>esel.has(x)),color:col};
     if(!data.title||!data.date)return;
     closeSheet();
     const ok=ev?await upd('events',id,data):await add('events',{...data,createdBy:S.me.id,createdAt:Date.now()});
