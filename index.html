@@ -450,8 +450,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.6.0';
+const APP_VERSION='1.6.1';
 const CHANGELOG=[
+  {v:'1.6.1',date:'2026-09-28',items:['資料フォルダが読み込めないときに「まだ参加できません」と表示され、アプリが使えなくなる不具合を修正']},
   {v:'1.6.0',date:'2026-09-28',items:['TODOを「資料」フォルダに変更しました。フォルダはだれでも作成・追加できます','報告にファイルを添付できるようになりました。本文に「〇〇フォルダに保存」と書くと、そのフォルダに保存されます','写真は自動で軽く変換して保存します']},
   {v:'1.5.0',date:'2026-09-28',items:['毎朝、その日のタスク・予定・未確認の連絡をお知らせする通知を追加（右上のベルからオンにできます）','部署名を「経営管理総務部」「経営管理経理部」に変更','ホーム画面に追加すると、専用のアイコンで起動できるようになりました']},
   {v:'1.4.0',date:'2026-09-28',items:['経営管理部を総務部と経理部に分けました（該当の方はプロフィールで部署を選び直してください）','タスクの担当に「部門」タブを追加し、部門ごとに割り当てられるようになりました','予定に担当者・担当部門・タブカラーを設定できるようになりました']},
@@ -610,7 +611,7 @@ function paint(){
   $('#banner').hidden=!S.preview;
   $('#hdot').hidden=!unseen();
   $('#meAv').innerHTML=S.me.id?av(S.me.id):'';
-  const fab=$('#fab'),F={home:'報告する',tasks:'タスク追加',reports:'報告する',calendar:'予定を追加',docs:S.folderOpen?'ファイルを追加':'フォルダを作成'};
+  const fab=$('#fab'),F={home:'報告する',tasks:'タスク追加',reports:'報告する',calendar:'予定を追加',docs:S.docsDenied?'':S.folderOpen?'ファイルを追加':'フォルダを作成'};
   fab.hidden=!S.loaded||!S.canWrite||!F[S.view];
   if(F[S.view])fab.innerHTML=PLUS+`<span>${F[S.view]}</span>`;
   const v=$('#view');
@@ -781,6 +782,7 @@ org(){
   <p class="org-hint" style="margin-top:16px">部署名をタップするとメンバーが表示されます。報告で「@部署名」と書くと、その部署の全員にまとめてメンションできます。</p>`;
 },
 docs(){
+  if(S.docsDenied)return `<h1 class="pg">資料</h1>${empty('資料フォルダは準備中です','管理者がFirestoreのルールを設定すると使えるようになります')}`;
   if(S.folderOpen)return folderView();
   return `<h1 class="pg">資料</h1>
   <input id="docsQ" class="docs-q" type="search" placeholder="資料やフォルダを検索" aria-label="資料を検索" value="${esc(S.docsQ||'')}" autocomplete="off">
@@ -1559,6 +1561,9 @@ function watch(q,ok){
     else toast('データを読み込めませんでした。ページを開き直してください');
   }));
 }
+// 資料フォルダなど、読めなくてもアプリ全体は止めないデータ用
+function subSoft(k,q){unsubs.push(q.onSnapshot(s=>{S[k]=s.docs.map(d=>({id:d.id,...d.data()}));S.docsDenied=false;schedule();},
+  e=>{console.warn(k,e);if(e&&e.code==='permission-denied'){S.docsDenied=true;schedule();}}));}
 function sub(k,q){watch(q,s=>{S[k]=s.docs.map(d=>{const o={id:d.id,...d.data()};if(o.depts)o.depts=normDepts(o.depts);return o;});schedule();});}
 function start(u){
   S.me={id:u.uid,name:u.displayName||(u.email||'').split('@')[0],avatarUrl:u.photoURL||'',color:colorFor(u.uid)};
@@ -1573,8 +1578,8 @@ function start(u){
       sub('tasks',db.collection('tasks'));
       sub('reports',db.collection('reports').orderBy('createdAt','desc').limit(300));
       sub('events',db.collection('events'));
-      sub('folders',db.collection('folders'));
-      sub('files',db.collection('files').orderBy('createdAt','desc').limit(500));
+      subSoft('folders',db.collection('folders'));
+      subSoft('files',db.collection('files').orderBy('createdAt','desc').limit(500));
       unsubs.push(db.collection('feedback').where('uid','==',u.uid).onSnapshot(fs=>{S.myFb=fs.docs.map(d=>({id:d.id,...d.data()}));},()=>{}));
       S.loaded=true;
       checkPush().then(()=>{schedule();refreshPush();});
