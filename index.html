@@ -1439,7 +1439,7 @@ function fileRow(f,showFolder){
   const k=KINDS[fileKind(f.name,f.type)]||KINDS.other,fd=showFolder?S.folders.find(x=>x.id===f.folderId):null;
   const saved=f.origSize&&f.origSize>f.size*1.05?`<span class="shrink">元 ${fmtSize(f.origSize)}</span>`:'';
   return `<div class="frow"><button type="button" class="fmain" data-fopen="${esc(f.id)}"><span class="fk" style="--fk:${k[1]}">${k[0]}</span>
-    <span class="fmt"><b>${esc(f.name)}</b><span>${fmtSize(f.size)}${saved}・${esc(pname(f.by))}・${fmtDate(f.createdAt)}${fd?`・${esc(fd.name)}`:''}</span></span></button>
+    <span class="fmt"><b>${esc(f.name)}</b><span>${fmtSize(f.size)}${saved}・${f.by==='claude'?'Claude':esc(pname(f.by))}${f.via==='claude'&&f.by!=='claude'?'（Claude経由）':''}・${fmtDate(f.createdAt)}${fd?`・${esc(fd.name)}`:''}</span></span></button>
     <button type="button" class="x" data-fsave="${esc(f.id)}" aria-label="端末に保存"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg></button>
     ${canManage(f)?`<button type="button" class="x" data-fdel="${esc(f.id)}" aria-label="削除">${XIC}</button>`:''}</div>`;
 }
