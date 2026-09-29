@@ -161,6 +161,7 @@ async function main() {
 
   for (const tk of deadTokens) { await db.collection('pushTokens').doc(tk).delete().catch(() => {}); stats.removed++; }
   console.log(`メンション通知 ${stats.mention} 件 / まとめ ${stats.digest} 件 / 無効な端末の削除 ${stats.removed} 件 / 失敗 ${stats.failed} 件`);
+  console.log(`::notice::通知オンの端末 ${tokens.length} 台 / メンション通知 ${stats.mention} 件 / まとめ ${stats.digest} 件 / 無効端末の削除 ${stats.removed} 件 / 失敗 ${stats.failed} 件`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
