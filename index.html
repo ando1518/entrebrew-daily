@@ -286,7 +286,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .upd{background:var(--accent-soft);border-radius:var(--r);padding:14px 16px;display:grid;gap:8px;margin-bottom:16px}
 .ntf{background:var(--surface2);border-radius:14px;padding:12px 14px;display:grid;gap:10px}
 .ntf-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.ntf-row select{flex:1;min-width:120px;font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:9px 10px}
+.ntf-row select{flex:1 1 100%;min-width:0;font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:9px 10px}
 .ntf-row .btn{padding:9px 16px;font-size:14px}
 .ntf-home{background:var(--sky-soft);margin-bottom:16px;padding:14px 16px}
 .ntf-home b{font-family:var(--font-d);font-weight:800;font-size:16px;color:var(--ink)}
@@ -353,6 +353,12 @@ a.fmain{color:inherit;text-decoration:none}
 .tref::before{content:"";width:14px;height:14px;flex:none;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'/%3E%3C/svg%3E") center/contain no-repeat}
 .mk{margin-left:auto;background:none;border:0;color:var(--accent-ink);font-size:12.5px;font-weight:800;padding:4px 6px}
 .mk+.del{margin-left:0}
+.reacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.rx{display:inline-flex;align-items:center;gap:4px;border:1.5px solid var(--line);background:none;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.4}
+.rx .e{font-size:15px;line-height:1}
+.rx.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.ntf-chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;font-weight:700;color:var(--ink)}
+.ntf-chk input{width:20px;height:20px;margin:1px 0 0;flex:none;accent-color:var(--accent)}
 /* sheet */
 .back{position:fixed;inset:0;background:var(--scrim);z-index:30;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;animation:up .18s ease-out}
@@ -449,6 +455,7 @@ const PLUS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 const STATUS={todo:'未着手',doing:'進行中',done:'完了'};
 const NEXT={todo:'doing',doing:'done',done:'todo'};
 const CAT={'日報':'c-day','連絡':'c-note','共有':'c-share'};
+const REACTS=[['like','👍','いいね'],['thanks','🙏','ありがとう'],['ok','👌','了解'],['yay','🎉','すごい']];
 const DEPTS=['取締役会','経営管理総務部','経営管理経理部','国際事業部','営業部','マーケティング部','EC部','商品部','店舗運営部'];
 const BOARD='取締役会';
 const DC={'取締役会':'#E08A12','経営管理総務部':'#5B6CE0','経営管理経理部':'#7A4FD0','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
@@ -459,8 +466,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.8.0';
+const APP_VERSION='1.9.0';
 const CHANGELOG=[
+  {v:'1.9.0',date:'2026-09-29',items:['通知を強化：自分・自分の部署・@全員 がメンションされたら知らせます','朝と夜の好きな時刻に、新しい報告や未確認の連絡・タスクをまとめてお知らせ（右上のベルで設定）','「@全員」で全員にメンションできるようになりました','報告に「いいね」「ありがとう」などのリアクションを付けられるようになりました','通知が届かなかった不具合を修正']},
   {v:'1.8.0',date:'2026-09-29',items:['報告や資料から、ボタン1つでタスクを作れるようになりました（参考資料のリンク付き）','TeamsやSharePointのリンクを「Teams・SharePoint」と表示するようにしました']},
   {v:'1.7.0',date:'2026-09-29',items:['報告・連絡に貼ったリンク（Googleドライブなど）も、自動で資料フォルダに登録されるようになりました','報告・連絡の添付ファイルは、指定がなければ「報告・連絡の資料」フォルダに自動で保存されます','フォルダにリンクを追加できるようになりました']},
   {v:'1.6.1',date:'2026-09-28',items:['資料フォルダが読み込めないときに「まだ参加できません」と表示され、アプリが使えなくなる不具合を修正']},
@@ -529,6 +537,7 @@ function isToMe(r){
   const me=S.me.id;if(!me)return false;
   if((r.mentions||[]).includes(me))return true;
   if(r.author===me)return false;
+  if(r.all)return true;
   if(isBoard()&&(r.mentions||[]).length)return true;
   return deptHitsMe(r.depts);
 }
@@ -656,7 +665,7 @@ function taskCard(t){
     </div>${t.link||t.fileId?`<div class="tref-wrap">${refChip(t)}</div>`:''}</div>`;
 }
 function richBody(b){
-  return esc(b).replace(/@\{g:([^}]{1,20})\}/g,(_,d0)=>{const d=normDept(d0);return `<span class="mention grp ${deptHitsMe([d])?'me':''}">@${d}</span>`;})
+  return esc(b).replace(/@\{all\}/g,'<span class="mention grp me">@全員</span>').replace(/@\{g:([^}]{1,20})\}/g,(_,d0)=>{const d=normDept(d0);return `<span class="mention grp ${deptHitsMe([d])?'me':''}">@${d}</span>`;})
     .replace(/@\{([A-Za-z0-9_\-.~:+]+)\}/g,(_,id)=>`<span class="mention ${id===S.me.id?'me':''}">@${esc(pname(id))}</span>`)
     .replace(/https?:\/\/[^\s<>"'「」『』（）()【】]+/g,u=>{const t=u.replace(/[。、．，.,!?！？)）\]]+$/,'');const rest=u.slice(t.length);return `<a class="rlink" href="${t}" target="_blank" rel="noopener noreferrer">${linkName(t.replace(/&amp;/g,'&'))}</a>${rest}`;})
     .replace(/\n/g,'<br>');
@@ -674,6 +683,8 @@ function reportCard(r){
     <p class="r-body">${richBody(r.body)}</p>
     ${(r.files||[]).length?`<div class="ratt">${r.files.map(f=>`<button type="button" class="attchip" data-fopen="${esc(f.id)}">${esc(f.name)}<small>${fmtSize(f.size)}</small></button>`).join('')}</div>`:''}
     ${r.folderId&&S.folders.some(x=>x.id===r.folderId)?`<button type="button" class="link saved-to" data-fold="${esc(r.folderId)}">「${esc(S.folders.find(x=>x.id===r.folderId).name)}」フォルダに保存済み</button>`:''}
+    <div class="reacts">${REACTS.map(([k,e,l])=>{const who=Object.entries((r.reacts||{})[k]||{}).filter(([,v])=>v).map(([u])=>u);const on=who.includes(S.me.id);
+      return `<button type="button" class="rx ${on?'on':''}" data-react="${esc(r.id)}|${k}" aria-pressed="${on}" aria-label="${l}${who.length?`（${who.length}人）`:''}" title="${esc(who.length?who.map(pname).join('、'):l)}"><span class="e">${e}</span>${who.length?`<span>${who.length}</span>`:`<span class="rl">${l}</span>`}</button>`;}).join('')}</div>
     <div class="r-foot">
       <button class="ack ${mine?'on':''}" type="button" data-ack="${esc(r.id)}">${CHECK}${mine?'確認済み':'確認しました'}</button>
       ${acks.length?`<span class="stack">${acks.slice(0,4).map(i=>av(i,'sm')).join('')}</span><span class="ack-n">${acks.length}人が確認</span>`:''}
@@ -895,7 +906,7 @@ function reportSheet(){
   const picked=[];let cat='日報',ms=null,hits=[];
   openSheet(`<form id="f"><h2>報告・連絡を投稿</h2>
     <div class="seg" id="rCat" style="margin:0">${Object.keys(CAT).map(c=>`<button type="button" data-c="${c}" class="${c===cat?'on':''}">${c}</button>`).join('')}</div>
-    <div class="mwrap"><label class="fld" for="rBody">本文 <span class="hint">「@」に続けて名前か部署名を入力するとメンションできます</span></label>
+    <div class="mwrap"><label class="fld" for="rBody">本文 <span class="hint">「@」に続けて名前・部署名・「全員」を入力するとメンションできます</span></label>
       <textarea id="rBody" rows="6" maxlength="2000" required placeholder="例：本日の出荷は42件完了。@EC部 のみなさん、明日の棚卸しの件よろしくお願いします。"></textarea>
       <div class="sugg" id="mS" hidden></div>
       <div><button type="button" class="seg-like btn ghost" id="atBtn" style="padding:6px 14px;font-size:13.5px">@ メンションを追加</button></div>
@@ -934,8 +945,9 @@ function reportSheet(){
     const q=m[1];hits=await searchPeople(q);
     if(!ms)return;
     const ql=q.toLowerCase(),gs=DEPTS.filter(d=>!q||d.toLowerCase().includes(ql));
+    const allHit=!q||'全員'.includes(q)||'ぜんいん'.includes(q)||'all'.includes(ql);
     SG.hidden=false;
-    SG.innerHTML=(gs.length?'<div class="lab">部署でまとめて</div>'+gs.map(d=>`<button type="button" class="grp-hit" data-g="${esc(d)}"><span class="gdot" style="background:${DC[d]}">${esc(d.slice(0,1))}</span><span>${esc(d)}</span><span class="sub">${deptMembers(d).length}人</span></button>`).join(''):'')
+    SG.innerHTML=(allHit?`<div class="lab">全体に</div><button type="button" class="grp-hit" data-g="全員"><span class="gdot" style="background:#DC3F47">全</span><span>全員</span><span class="sub">${Object.keys(S.members).length}人</span></button>`:'')+(gs.length?'<div class="lab">部署でまとめて</div>'+gs.map(d=>`<button type="button" class="grp-hit" data-g="${esc(d)}"><span class="gdot" style="background:${DC[d]}">${esc(d.slice(0,1))}</span><span>${esc(d)}</span><span class="sub">${deptMembers(d).length}人</span></button>`).join(''):'')
       +(hits.length?'<div class="lab">メンバー</div>'+hits.map(h=>`<button type="button" data-id="${esc(h.id)}">${h.avatarUrl?`<img class="av sm" src="${esc(h.avatarUrl)}" alt="">`:av(h.id,'sm')}<span>${esc(h.name)}</span></button>`).join(''):'')
       ||`<p class="muted">${q?'該当する部署・メンバーがいません':'名前を入力して検索'}</p>`;
   };
@@ -967,7 +979,8 @@ function reportSheet(){
     e.preventDefault();
     let body=ta.value.trim();if(!body)return;
     const raw=body,fv=$('#rFoldWrap').hidden?'':$('#rFold').value;
-    const ids=new Set(),depts=[];
+    const ids=new Set(),depts=[];let all=false;
+    if(body.includes('@全員')){body=body.split('@全員').join('@{all}');all=true;}
     DEPTS.slice().sort((a,b)=>b.length-a.length).forEach(d=>{const tok='@'+d;if(body.includes(tok)){body=body.split(tok).join('@{g:'+d+'}');depts.push(d);deptMembers(d).forEach(i=>ids.add(i));}});
     picked.sort((a,b)=>b.name.length-a.name.length).forEach(p=>{const tok='@'+p.name;if(body.includes(tok)){body=body.split(tok).join('@{'+p.id+'}');ids.add(p.id);}});
     ids.delete(S.me.id);
@@ -989,9 +1002,9 @@ function reportSheet(){
       }
     }
     try{
-      await ref.set({author:S.me.id,cat,body,mentions:[...ids],depts:DEPTS.filter(d=>depts.includes(d)),acks:{},createdAt:Date.now(),
+      await ref.set({author:S.me.id,cat,body,mentions:[...ids],depts:DEPTS.filter(d=>depts.includes(d)),all,acks:{},createdAt:Date.now(),
         files:saved.map(f=>({id:f.id,name:f.name,size:f.size})),folderId:(saved.length||linked)?folderId:null});
-      setTimeout(()=>toast(depts.length?`投稿しました（${depts.join('・')}ほか ${ids.size}人にメンション）`:ids.size?`投稿しました（${ids.size}人にメンション）`:'投稿しました'),saved.length?2600:0);
+      setTimeout(()=>toast(all?'投稿しました（全員にメンション）':depts.length?`投稿しました（${depts.join('・')}ほか ${ids.size}人にメンション）`:ids.size?`投稿しました（${ids.size}人にメンション）`:'投稿しました'),saved.length?2600:0);
     }catch(err){fail(err);}
   });
   setTimeout(()=>ta.focus(),60);
@@ -1087,11 +1100,10 @@ function aboutSheet(){
     <div class="log">${CHANGELOG.map(c=>`<div><div class="log-v"><span>v${c.v}</span><span class="d">${c.date.replace(/-/g,'/')}</span></div><ul>${c.items.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`).join('')}</div>
     ${auth&&auth.currentUser?`<p class="intro">ログイン中：${esc(auth.currentUser.email||'')}</p>`:''}
     <div class="actions">${auth&&auth.currentUser?'<button type="button" class="btn danger" data-logout>ログアウト</button>':''}<span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button></div></div>`);
-  const hs=$('#pushHour');
-  if(hs&&pushState()==='on')hs.onchange=async()=>{
-    const h=Number(hs.value);
-    try{await saveToken(h);toast(`毎朝${h}時ごろに変更しました`);}catch(e){console.warn(e);toast('時刻を変更できませんでした。もう一度お試しください');}
-  };
+  if(pushState()==='on')['#pushM','#pushE','#pushMen'].forEach(id=>{const el=$(id);if(el)el.onchange=async()=>{
+    const pr=readPushForm();
+    try{await saveToken(pr);toast(`通知の設定を変更しました（${prefsText(pr)}）`);const it=$('#sheet .ntf .intro');if(it)it.textContent=`オンです。${prefsText(pr)}にお知らせします。メンションの通知は、投稿から5〜15分ほどで届きます。`;}catch(e){console.warn(e);toast('設定を変更できませんでした。もう一度お試しください');}
+  };});
 }
 function feedbackSheet(){
   let type='不具合';
@@ -1141,13 +1153,20 @@ function setView(v){
 document.addEventListener('click',async e=>{
   if(e.target.closest('a.tref,a.rlink,a.fmain'))return;
   if(e.target.closest('[data-logout]')){closeSheet();if(pushGet())await disablePush(true);if(auth)auth.signOut();return;}
-  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-mkr],[data-mkf],[data-rmatt],#fab');
+  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-mkr],[data-mkf],[data-react],[data-rmatt],#fab');
   if(!g){if(e.target.id==='back')closeSheet();return;}
   const ds=g.dataset;
   if('rmatt' in ds)return;
   if(ds.fold){closeSheet();S.folderOpen=ds.fold;S.docsQ='';if(S.view!=='docs')setView('docs');else{paint();window.scrollTo(0,0);}return;}
   if('foldback' in ds){S.folderOpen=null;paint();return;}
   if(ds.foldedit){folderSheet(ds.foldedit);return;}
+  if(ds.react){
+    if(!S.me.id)return;
+    const [rid,k]=ds.react.split('|'),r=S.reports.find(x=>x.id===rid);if(!r)return;
+    const on=!!(((r.reacts||{})[k]||{})[S.me.id]);
+    await upd('reports',rid,{['reacts.'+k+'.'+S.me.id]:on?firebase.firestore.FieldValue.delete():Date.now()});
+    return;
+  }
   if(ds.mkr){
     const r=S.reports.find(x=>x.id===ds.mkr);if(!r)return;
     const plain=(r.body||'').replace(/@\{g:([^}]{1,20})\}/g,(_,d)=>'@'+normDept(d)).replace(/@\{([A-Za-z0-9_\-.~:+]+)\}/g,(_,id)=>'@'+pname(id));
@@ -1169,7 +1188,7 @@ document.addEventListener('click',async e=>{
     if(!g.classList.contains('armed')){g.classList.add('armed');g.style.color='var(--cherry)';toast('もう一度押すと削除します');setTimeout(()=>{if(g.isConnected){g.classList.remove('armed');g.style.color='';}},3000);return;}
     deleteFile(ds.fdel);return;
   }
-  if('pushon' in ds){const hs=$('#pushHour');g.disabled=true;await enablePush(hs?Number(hs.value):7);g.disabled=false;refreshPushUi();return;}
+  if('pushon' in ds){g.disabled=true;await enablePush(readPushForm());g.disabled=false;refreshPushUi();return;}
   if('pushoff' in ds){await disablePush(false);refreshPushUi();return;}
   if('pushdismiss' in ds){try{localStorage.setItem('eb-push-dismiss','1');}catch(e){}paint();return;}
   if('about' in ds){aboutSheet();return;}
@@ -1565,12 +1584,14 @@ function folderView(){
 /* ---------- morning notifications ---------- */
 // 公開用のウェブプッシュ鍵（Firebase の Cloud Messaging 設定で作成した場合だけ入れる。空なら既定の鍵を使う）
 const VAPID_KEY='';
-const NOTIFY_HOURS=[6,7,8,9];
+const MORNING_HOURS=[6,7,8,9],EVENING_HOURS=[17,18,19,20,21,22];
+const PUSH_DEFAULT={hour:7,eveningHour:20,mention:true};
 let msgReg=null,messagingObj=null,pushSupported=null;
 const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const isStandalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;}catch(e){return false;}};
 function pushGet(){try{return JSON.parse(localStorage.getItem('eb-push')||'null');}catch(e){return null;}}
 function pushSet(v){try{if(v)localStorage.setItem('eb-push',JSON.stringify(v));else localStorage.removeItem('eb-push');}catch(e){}}
+const pushPrefs=()=>{const p=pushGet()||{};return {hour:p.hour===undefined?PUSH_DEFAULT.hour:p.hour,eveningHour:p.eveningHour===undefined?PUSH_DEFAULT.eveningHour:p.eveningHour,mention:p.mention!==false};};
 async function checkPush(){
   try{pushSupported=!!(window.firebase&&firebase.messaging&&'serviceWorker' in navigator&&'Notification' in window&&await firebase.messaging.isSupported());}
   catch(e){pushSupported=false;}
@@ -1589,21 +1610,27 @@ async function getMessaging(){
   messagingObj.onMessage(p=>{const n=p.notification||{};toast(n.title?`${n.title}　${(n.body||'').split('\n')[0]}`:'新しいお知らせがあります');});
   return messagingObj;
 }
-async function saveToken(hour){
+async function saveToken(prefs){
   const m=await getMessaging();
   const opts={serviceWorkerRegistration:msgReg};if(VAPID_KEY)opts.vapidKey=VAPID_KEY;
   const token=await m.getToken(opts);
   if(!token)throw new Error('no-token');
   const old=pushGet();
   if(old&&old.token&&old.token!==token){try{await db.collection('pushTokens').doc(old.token).delete();}catch(e){}}
-  await db.collection('pushTokens').doc(token).set({uid:S.me.id,email:(auth.currentUser&&auth.currentUser.email)||'',hour,ua:navigator.userAgent.slice(0,160),updatedAt:Date.now()});
-  pushSet({token,hour});
+  await db.collection('pushTokens').doc(token).set({uid:S.me.id,email:(auth.currentUser&&auth.currentUser.email)||'',hour:prefs.hour,eveningHour:prefs.eveningHour,mention:prefs.mention,ua:navigator.userAgent.slice(0,160),updatedAt:Date.now()},{merge:true});
+  pushSet({token,...prefs});
 }
-async function enablePush(hour){
+function readPushForm(){
+  const v=id=>{const el=$(id);if(!el)return undefined;const n=Number(el.value);return n<0?null:n;};
+  const p=pushPrefs(),mh=v('#pushM'),eh=v('#pushE'),mc=$('#pushMen');
+  return {hour:mh===undefined?p.hour:mh,eveningHour:eh===undefined?p.eveningHour:eh,mention:mc?mc.checked:p.mention};
+}
+const prefsText=p=>[p.mention?'メンションされたとき':'',p.hour!==null?`朝${p.hour}時`:'',p.eveningHour!==null?`夜${p.eveningHour}時`:''].filter(Boolean).join('・')||'（すべてオフ）';
+async function enablePush(prefs){
   let perm=Notification.permission;
   if(perm==='default')perm=await Notification.requestPermission();
   if(perm!=='granted'){toast(perm==='denied'?'通知がブロックされています。端末の設定で許可してください':'通知は許可されませんでした');return false;}
-  try{await saveToken(hour);toast(`毎朝${hour}時ごろに通知が届きます`);return true;}
+  try{await saveToken(prefs);toast(`通知をオンにしました（${prefsText(prefs)}）`);return true;}
   catch(e){console.warn(e);toast(e&&e.code==='permission-denied'?'通知の設定を保存できませんでした。管理者に連絡してください':'通知をオンにできませんでした。もう一度お試しください');return false;}
 }
 async function disablePush(silent){
@@ -1612,33 +1639,36 @@ async function disablePush(silent){
     try{await db.collection('pushTokens').doc(p.token).delete();}catch(e){}
     try{const m=await getMessaging();await m.deleteToken();}catch(e){}
   }
-  pushSet(null);if(!silent)toast('毎朝の通知をオフにしました');
+  pushSet(null);if(!silent)toast('通知をオフにしました');
 }
 async function refreshPush(){
   if(pushState()!=='on')return;
-  try{await saveToken(pushGet().hour||7);}catch(e){console.warn(e);}
+  try{await saveToken(pushPrefs());}catch(e){console.warn(e);}
 }
 function pushSectionHtml(){
-  const st=pushState(),p=pushGet(),hr=(p&&p.hour)||7;
+  const st=pushState(),p=pushPrefs();
   const msg={
-    on:`オンです。毎朝${hr}時ごろに、その日のタスク・予定・未確認の連絡をお知らせします。`,
-    off:'オンにすると、毎朝その日のタスク・予定・未確認の連絡をお知らせします。',
+    on:`オンです。${prefsText(p)}にお知らせします。メンションの通知は、投稿から5〜15分ほどで届きます。`,
+    off:'オンにすると、メンションされたときと、朝・夜に選んだ時刻（新しい報告やタスクがあるとき）にお知らせします。',
     blocked:'通知がブロックされています。端末（ブラウザ）の設定で、このアプリの通知を許可してから開き直してください。',
     'ios-home':'iPhoneでは、Safariの共有ボタンから「ホーム画面に追加」し、追加したアイコンから開くと通知をオンにできます。',
     unsupported:'このブラウザは通知に対応していません。スマホはホーム画面に追加したアイコンから、パソコンはChromeかEdgeで開いてください。',
     loading:'確認中…'}[st];
-  const sel=`<select id="pushHour" aria-label="通知の時刻">${NOTIFY_HOURS.map(h=>`<option value="${h}" ${h===hr?'selected':''}>毎朝 ${h}:00ごろ</option>`).join('')}</select>`;
-  return `<h3>毎朝の通知</h3><div class="ntf"><p class="intro">${msg}</p>${st==='on'||st==='off'?`<div class="ntf-row">${sel}${st==='on'?'<button type="button" class="btn ghost" data-pushoff>オフにする</button>':'<button type="button" class="btn primary" data-pushon>オンにする</button>'}</div>`:''}</div>`;
+  const opt=(hs,cur,pre)=>`<option value="-1" ${cur===null?'selected':''}>${pre}：オフ</option>`+hs.map(h=>`<option value="${h}" ${h===cur?'selected':''}>${pre}：${h}:00ごろ</option>`).join('');
+  const form=`<label class="ntf-chk"><input type="checkbox" id="pushMen" ${p.mention?'checked':''}> 自分・自分の部署・@全員 がメンションされたら知らせる</label>
+    <div class="ntf-row"><select id="pushM" aria-label="朝のまとめ">${opt(MORNING_HOURS,p.hour,'朝のまとめ')}</select><select id="pushE" aria-label="夜のまとめ">${opt(EVENING_HOURS,p.eveningHour,'夜のまとめ')}</select></div>
+    <div class="ntf-row">${st==='on'?'<button type="button" class="btn ghost" data-pushoff>この端末の通知をオフ</button>':'<button type="button" class="btn primary" data-pushon>通知をオンにする</button>'}</div>`;
+  return `<h3>通知</h3><div class="ntf"><p class="intro">${msg}</p>${st==='on'||st==='off'?form:''}</div>`;
 }
 function pushPromptHtml(){
   if(!S.me.id||S.preview||!S.loaded)return '';
   let dis=false;try{dis=localStorage.getItem('eb-push-dismiss')==='1';}catch(e){}
   if(dis)return '';
   const st=pushState();
-  const body=st==='off'&&Notification.permission==='default'?'その日のタスク・予定・未確認の連絡を、毎朝7時ごろにお知らせします。時刻は右上のベルから変えられます。'
-    :st==='ios-home'?'Safariの共有ボタンから「ホーム画面に追加」して、追加したアイコンから開くと、毎朝の通知を受け取れます。':'';
+  const body=st==='off'&&Notification.permission==='default'?'メンションされたときと、朝7時・夜20時（新しい報告やタスクがあるとき）にお知らせします。時刻は右上のベルから変えられます。'
+    :st==='ios-home'?'Safariの共有ボタンから「ホーム画面に追加」して、追加したアイコンから開くと、通知を受け取れます。':'';
   if(!body)return '';
-  return `<section class="ntf ntf-home" aria-label="毎朝の通知"><b>毎朝の通知を受け取りませんか？</b><p>${body}</p>
+  return `<section class="ntf ntf-home" aria-label="通知"><b>通知を受け取りませんか？</b><p>${body}</p>
     <div class="actions"><button type="button" class="btn ghost" data-pushdismiss>${st==='off'?'あとで':'閉じる'}</button><span class="sp"></span>${st==='off'?'<button type="button" class="btn primary" data-pushon>オンにする</button>':''}</div></section>`;
 }
 function refreshPushUi(){if(!$('#back').hidden&&$('#sheet .about'))aboutSheet();else paint();}

@@ -1,0 +1,46 @@
+name: 通知
+
+on:
+  schedule:
+    # 5分ごと（GitHub の混雑状況により数分〜15分ほど遅れることがあります）
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'テスト：このメールアドレスの端末にだけ送る（空欄なら通常どおり）'
+        required: false
+        default: ''
+      slot:
+        description: 'テスト：まとめを今すぐ送る（morning / evening。空欄ならテスト通知のみ）'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: notify
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - uses: actions/cache@v4
+        with:
+          path: scripts/node_modules
+          key: notify-${{ hashFiles('scripts/package.json') }}
+      - name: 準備
+        run: npm install --no-audit --no-fund --prefix scripts
+      - name: 通知を送る
+        run: node scripts/notify.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          TEST_EMAIL: ${{ github.event.inputs.email }}
+          FORCE_SLOT: ${{ github.event.inputs.slot }}
+          APP_URL: https://ando1518.github.io/entrebrew-daily/
