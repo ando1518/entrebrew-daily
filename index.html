@@ -344,6 +344,9 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .attchip button{border:0;background:none;color:var(--muted);padding:0 2px;font-size:17px;line-height:1}
 .saved-to{display:inline-block;margin-top:8px}
 
+a.fmain{color:inherit;text-decoration:none}
+.fnote{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--muted)}
+.rlink{color:var(--sky);font-weight:700;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
 /* sheet */
 .back{position:fixed;inset:0;background:var(--scrim);z-index:30;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;animation:up .18s ease-out}
@@ -450,8 +453,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.6.1';
+const APP_VERSION='1.7.0';
 const CHANGELOG=[
+  {v:'1.7.0',date:'2026-09-29',items:['報告・連絡に貼ったリンク（Googleドライブなど）も、自動で資料フォルダに登録されるようになりました','報告・連絡の添付ファイルは、指定がなければ「報告・連絡の資料」フォルダに自動で保存されます','フォルダにリンクを追加できるようになりました']},
   {v:'1.6.1',date:'2026-09-28',items:['資料フォルダが読み込めないときに「まだ参加できません」と表示され、アプリが使えなくなる不具合を修正']},
   {v:'1.6.0',date:'2026-09-28',items:['TODOを「資料」フォルダに変更しました。フォルダはだれでも作成・追加できます','報告にファイルを添付できるようになりました。本文に「〇〇フォルダに保存」と書くと、そのフォルダに保存されます','写真は自動で軽く変換して保存します']},
   {v:'1.5.0',date:'2026-09-28',items:['毎朝、その日のタスク・予定・未確認の連絡をお知らせする通知を追加（右上のベルからオンにできます）','部署名を「経営管理総務部」「経営管理経理部」に変更','ホーム画面に追加すると、専用のアイコンで起動できるようになりました']},
@@ -611,7 +615,7 @@ function paint(){
   $('#banner').hidden=!S.preview;
   $('#hdot').hidden=!unseen();
   $('#meAv').innerHTML=S.me.id?av(S.me.id):'';
-  const fab=$('#fab'),F={home:'報告する',tasks:'タスク追加',reports:'報告する',calendar:'予定を追加',docs:S.docsDenied?'':S.folderOpen?'ファイルを追加':'フォルダを作成'};
+  const fab=$('#fab'),F={home:'報告する',tasks:'タスク追加',reports:'報告する',calendar:'予定を追加',docs:S.docsDenied?'':S.folderOpen?'資料を追加':'フォルダを作成'};
   fab.hidden=!S.loaded||!S.canWrite||!F[S.view];
   if(F[S.view])fab.innerHTML=PLUS+`<span>${F[S.view]}</span>`;
   const v=$('#view');
@@ -646,7 +650,9 @@ function taskCard(t){
 }
 function richBody(b){
   return esc(b).replace(/@\{g:([^}]{1,20})\}/g,(_,d0)=>{const d=normDept(d0);return `<span class="mention grp ${deptHitsMe([d])?'me':''}">@${d}</span>`;})
-    .replace(/@\{([A-Za-z0-9_\-.~:+]+)\}/g,(_,id)=>`<span class="mention ${id===S.me.id?'me':''}">@${esc(pname(id))}</span>`).replace(/\n/g,'<br>');
+    .replace(/@\{([A-Za-z0-9_\-.~:+]+)\}/g,(_,id)=>`<span class="mention ${id===S.me.id?'me':''}">@${esc(pname(id))}</span>`)
+    .replace(/https?:\/\/[^\s<>"'「」『』（）()【】]+/g,u=>{const t=u.replace(/[。、．，.,!?！？)）\]]+$/,'');const rest=u.slice(t.length);return `<a class="rlink" href="${t}" target="_blank" rel="noopener noreferrer">${linkName(t.replace(/&amp;/g,'&'))}</a>${rest}`;})
+    .replace(/\n/g,'<br>');
 }
 function reportCard(r){
   const acks=Object.entries(r.acks||{}).filter(([,v])=>v).map(([k])=>k);
@@ -887,8 +893,8 @@ function reportSheet(){
   const ta=$('#rBody'),SG=$('#mS');
   let files=[],userFold=false;
   const syncFold=()=>{
-    const det=folderFromText(ta.value),w=$('#rFoldWrap'),sel=$('#rFold');
-    w.hidden=!(files.length||det);if(w.hidden)return;
+    const det=folderFromText(ta.value),urls=findUrls(ta.value),w=$('#rFoldWrap'),sel=$('#rFold');
+    w.hidden=!(files.length||det||urls.length);if(w.hidden)return;
     const cur=sel.value,opts=[];
     if(det&&!folderByName(det))opts.push(`<option value="new:${esc(det)}">「${esc(det)}」を新しく作る</option>`);
     if(!folderByName(DEFAULT_REPORT_FOLDER))opts.push(`<option value="new:${DEFAULT_REPORT_FOLDER}">${DEFAULT_REPORT_FOLDER}（新しく作る）</option>`);
@@ -897,7 +903,8 @@ function reportSheet(){
     let want=cur;
     if(!userFold){const n=det||DEFAULT_REPORT_FOLDER,h=folderByName(n);want=h?'id:'+h.id:'new:'+n;}
     if([...sel.options].some(o=>o.value===want))sel.value=want;
-    $('#rFoldHint').textContent=files.length?'':'添付がないので、報告の本文をテキストファイルとして保存します';
+    const parts=[];if(files.length)parts.push(`添付${files.length}件（軽くして保存）`);if(urls.length)parts.push(`リンク${urls.length}件`);
+    $('#rFoldHint').textContent=parts.length?`${parts.join('と')}をこのフォルダに保存します`:'添付がないので、報告の本文をテキストファイルとして保存します';
   };
   const renderAtt=()=>{$('#rAtt').innerHTML=files.map((f,i)=>`<span class="attchip">${esc(f.name)}<small>${fmtSize(f.size)}</small><button type="button" data-rmatt="${i}" aria-label="添付を外す">×</button></span>`).join('');syncFold();};
   $('#rAttBtn').addEventListener('click',()=>pickFiles(fs=>{files=files.concat(fs).slice(0,10);renderAtt();}));
@@ -951,21 +958,24 @@ function reportSheet(){
     ids.delete(S.me.id);
     closeSheet();
     const ref=db.collection('reports').doc();
-    let saved=[],folderId=null;
+    let saved=[],folderId=null,linked=0;
     if(fv){
       try{folderId=fv.startsWith('id:')?fv.slice(3):await ensureFolder(fv.slice(4));}catch(err){fail(err);}
       if(folderId){
-        let toSave=files;
-        if(!toSave.length){
+        let toSave=files;const urls=findUrls(raw);
+        if(!toSave.length&&!urls.length){
           const d=new Date(),stamp=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
           toSave=[new File([`${cat}｜${pname(S.me.id)}｜${d.toLocaleString('ja-JP')}\n\n${raw}\n`],`報告_${stamp}_${pname(S.me.id)}.txt`,{type:'text/plain'})];
         }
-        saved=await uploadMany(toSave,folderId,{reportId:ref.id});
+        if(toSave.length)saved=await uploadMany(toSave,folderId,{reportId:ref.id});
+        const note=raw.replace(URL_RE,'').replace(/\s+/g,' ').trim().slice(0,80);
+        for(const u of urls){try{const r=await addLink(folderId,u,{reportId:ref.id,note,name:(linkName(u)+(note?'：'+note.slice(0,30):'')).slice(0,60)});if(r)linked++;}catch(err){console.warn(err);}}
+        if(linked&&!saved.length)toast(`リンク${linked}件をフォルダに保存しました`);
       }
     }
     try{
       await ref.set({author:S.me.id,cat,body,mentions:[...ids],depts:DEPTS.filter(d=>depts.includes(d)),acks:{},createdAt:Date.now(),
-        files:saved.map(f=>({id:f.id,name:f.name,size:f.size})),folderId:saved.length?folderId:null});
+        files:saved.map(f=>({id:f.id,name:f.name,size:f.size})),folderId:(saved.length||linked)?folderId:null});
       setTimeout(()=>toast(depts.length?`投稿しました（${depts.join('・')}ほか ${ids.size}人にメンション）`:ids.size?`投稿しました（${ids.size}人にメンション）`:'投稿しました'),saved.length?2600:0);
     }catch(err){fail(err);}
   });
@@ -1115,13 +1125,14 @@ function setView(v){
 /* ---------- events ---------- */
 document.addEventListener('click',async e=>{
   if(e.target.closest('[data-logout]')){closeSheet();if(pushGet())await disablePush(true);if(auth)auth.signOut();return;}
-  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-rmatt],#fab');
+  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-rmatt],#fab');
   if(!g){if(e.target.id==='back')closeSheet();return;}
   const ds=g.dataset;
   if('rmatt' in ds)return;
   if(ds.fold){closeSheet();S.folderOpen=ds.fold;S.docsQ='';if(S.view!=='docs')setView('docs');else{paint();window.scrollTo(0,0);}return;}
   if('foldback' in ds){S.folderOpen=null;paint();return;}
   if(ds.foldedit){folderSheet(ds.foldedit);return;}
+  if(ds.fcopy){const f=S.files.find(x=>x.id===ds.fcopy);if(f&&f.url){try{await navigator.clipboard.writeText(f.url);toast('リンクをコピーしました');}catch(err){toast(f.url);}}return;}
   if(ds.fopen){openFile(ds.fopen,false);return;}
   if(ds.fsave){openFile(ds.fsave,true);return;}
   if(ds.fdel){
@@ -1138,7 +1149,7 @@ document.addEventListener('click',async e=>{
   if(ds.prof){profileSheet(ds.prof);return;}
   if('myprof' in ds){if(!S.me.id){toast('サインインするとプロフィールを登録できます');return;}if(memberOf(S.me.id))profileSheet(S.me.id);else if(S.canWrite)profileForm(false);return;}
   if('editprof' in ds){profileForm(false);return;}
-  if(g.id==='fab'){({home:reportSheet,reports:reportSheet,tasks:()=>taskSheet(),calendar:()=>eventSheet(null,S.calSel),docs:()=>{if(S.folderOpen){const fid=S.folderOpen;pickFiles(fs=>uploadMany(fs,fid));}else folderSheet();}})[S.view]?.();return;}
+  if(g.id==='fab'){({home:reportSheet,reports:reportSheet,tasks:()=>taskSheet(),calendar:()=>eventSheet(null,S.calSel),docs:()=>{if(S.folderOpen)addToFolderSheet(S.folderOpen);else folderSheet();}})[S.view]?.();return;}
   if(ds.close!==undefined){closeSheet();return;}
   if(g.classList.contains('tab')){if(ds.v==='docs')S.folderOpen=null;setView(ds.v);return;}
   if(ds.go){if(ds.rf)S.repFilter=ds.rf;setView(ds.go);return;}
@@ -1285,12 +1296,34 @@ function gateDenied(u){
 /* ---------- 資料フォルダ ---------- */
 // ファイルは軽くしてから、Firestore に小分け（約700KBずつ）にして保存する
 const CHUNK=700000,MAX_FILE=15*1024*1024,MAX_IMG_EDGE=2000;
-const DEFAULT_REPORT_FOLDER='報告の添付';
+const DEFAULT_REPORT_FOLDER='報告・連絡の資料';
+// 本文に貼られたリンク（Googleドライブなど）を見つけて、フォルダに登録する
+const URL_RE=/https?:\/\/[^\s<>"'「」『』（）()【】]+/g;
+const findUrls=t=>[...new Set(((t||'').match(URL_RE)||[]).map(u=>u.replace(/[。、．，.,!?！？)）\]]+$/,'')))].slice(0,10);
+const LINK_SITES=[[/docs\.google\.com\/document/,'Googleドキュメント'],[/docs\.google\.com\/spreadsheets/,'Googleスプレッドシート'],[/docs\.google\.com\/presentation/,'Googleスライド'],
+  [/docs\.google\.com\/forms|forms\.gle/,'Googleフォーム'],[/drive\.google\.com/,'Googleドライブ'],[/(youtube\.com|youtu\.be)/,'YouTube'],[/dropbox\.com/,'Dropbox'],
+  [/(onedrive\.live\.com|1drv\.ms|sharepoint\.com)/,'OneDrive'],[/canva\.com/,'Canva'],[/notion\.(so|site)/,'Notion'],[/figma\.com/,'Figma'],[/box\.com/,'Box']];
+function linkName(url){
+  let host='',path='';try{const u=new URL(url);host=u.hostname.replace(/^www\./,'');path=decodeURIComponent(u.pathname).replace(/\/+$/,'');}catch(e){return url.slice(0,60);}
+  const site=(LINK_SITES.find(([re])=>re.test(url))||[])[1];
+  if(site)return site;
+  const last=path.split('/').filter(Boolean).pop()||'';
+  return last&&last.length<=40&&!/^[A-Za-z0-9_-]{20,}$/.test(last)?`${host}／${last}`:host;
+}
+const linkHost=url=>{try{return new URL(url).hostname.replace(/^www\./,'');}catch(e){return '';}};
+async function addLink(folderId,url,extra){
+  if(S.files.some(f=>f.folderId===folderId&&f.url===url))return null;
+  const meta={folderId,name:(extra&&extra.name)||linkName(url),url,type:'link',size:0,origSize:0,parts:0,enc:'',conv:'',by:S.me.id,createdAt:Date.now(),...(extra||{})};
+  const ref=await db.collection('files').add(meta);
+  db.collection('folders').doc(folderId).update({updatedAt:Date.now()}).catch(()=>{});
+  return {id:ref.id,...meta};
+}
 const FOLDER_COLORS=['#FFA41B','#2872D9','#15A36A','#C2459E','#7A4FD0','#1C9BB8','#DC3F47','#9A7433'];
 const fmtSize=n=>!n?'0 B':n<1024?n+' B':n<1048576?Math.round(n/1024)+' KB':(n/1048576).toFixed(1)+' MB';
 const fmtDate=ms=>{if(!ms)return '';const d=new Date(ms);return `${d.getMonth()+1}/${d.getDate()}`;};
-const KINDS={pdf:['PDF','#DC3F47'],image:['画像','#15A36A'],doc:['DOC','#2872D9'],sheet:['XLS','#1E8E5A'],slide:['PPT','#E08A12'],text:['TXT','#5B716B'],zip:['ZIP','#7A4FD0'],media:['動画','#C2459E'],other:['FILE','#5B716B']};
+const KINDS={link:['リンク','#1C9BB8'],pdf:['PDF','#DC3F47'],image:['画像','#15A36A'],doc:['DOC','#2872D9'],sheet:['XLS','#1E8E5A'],slide:['PPT','#E08A12'],text:['TXT','#5B716B'],zip:['ZIP','#7A4FD0'],media:['動画','#C2459E'],other:['FILE','#5B716B']};
 function fileKind(name,type){
+  if(type==='link')return 'link';
   const e=((name||'').split('.').pop()||'').toLowerCase();
   if(e==='pdf'||type==='application/pdf')return 'pdf';
   if((type||'').startsWith('image/')||['jpg','jpeg','png','webp','gif','heic','bmp'].includes(e))return 'image';
@@ -1431,6 +1464,24 @@ function folderSheet(id){
   });
   setTimeout(()=>$('#fdN')&&$('#fdN').focus(),60);
 }
+function addToFolderSheet(fid){
+  openSheet(`<form id="f"><h2>資料を追加</h2>
+    <button type="button" class="btn primary" id="afFile">ファイルを選ぶ（写真・PDF・Office など）</button>
+    <p class="hint" style="margin:0">写真は自動で軽くして保存します。15MBを超えるものは、共有リンクで追加してください。</p>
+    <div class="or">または リンクで追加</div>
+    <label class="fld">リンク（URL）<input id="afUrl" type="url" inputmode="url" placeholder="https://drive.google.com/…" autocomplete="off"></label>
+    <label class="fld">名前（空欄なら自動）<input id="afName" maxlength="60" placeholder="例：10月の販促チラシ"></label>
+    <div class="actions"><span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button><button class="btn primary" type="submit">リンクを追加</button></div></form>`);
+  $('#afFile').addEventListener('click',()=>pickFiles(fs=>{closeSheet();uploadMany(fs,fid);}));
+  $('#f').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const url=($('#afUrl').value||'').trim();
+    if(!/^https?:\/\//.test(url)){toast('https:// で始まるリンクを入力してください');return;}
+    const name=($('#afName').value||'').trim();
+    closeSheet();
+    try{const r=await addLink(fid,url,name?{name}:{});toast(r?'リンクを追加しました':'同じリンクがすでにあります');}catch(err){fail(err);}
+  });
+}
 function pickFiles(cb){
   const inp=document.createElement('input');inp.type='file';inp.multiple=true;
   inp.onchange=()=>{const fs=[...(inp.files||[])];if(fs.length)cb(fs);};
@@ -1439,6 +1490,12 @@ function pickFiles(cb){
 const FOLDER_SVG=c=>`<svg viewBox="0 0 32 26" aria-hidden="true"><path d="M2 4.5A2.5 2.5 0 0 1 4.5 2h7.2l3 3.2h12.8A2.5 2.5 0 0 1 30 7.7v14.8a2.5 2.5 0 0 1-2.5 2.5h-23A2.5 2.5 0 0 1 2 22.5z" fill="${c}"/><path d="M2 9h28v13.5a2.5 2.5 0 0 1-2.5 2.5h-23A2.5 2.5 0 0 1 2 22.5z" fill="${c}" opacity=".78"/></svg>`;
 function fileRow(f,showFolder){
   const k=KINDS[fileKind(f.name,f.type)]||KINDS.other,fd=showFolder?S.folders.find(x=>x.id===f.folderId):null;
+  if(f.type==='link'){
+    return `<div class="frow"><a class="fmain" href="${esc(f.url)}" target="_blank" rel="noopener noreferrer"><span class="fk" style="--fk:${k[1]}">${k[0]}</span>
+    <span class="fmt"><b>${esc(f.name)}</b><span>${esc(linkHost(f.url))}・${f.by==='claude'?'Claude':esc(pname(f.by))}・${fmtDate(f.createdAt)}${fd?`・${esc(fd.name)}`:''}</span>${f.note?`<span class="fnote">${esc(f.note)}</span>`:''}</span></a>
+    <button type="button" class="x" data-fcopy="${esc(f.id)}" aria-label="リンクをコピー"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></svg></button>
+    ${canManage(f)?`<button type="button" class="x" data-fdel="${esc(f.id)}" aria-label="削除">${XIC}</button>`:''}</div>`;
+  }
   const saved=f.origSize&&f.origSize>f.size*1.05?`<span class="shrink">元 ${fmtSize(f.origSize)}</span>`:'';
   return `<div class="frow"><button type="button" class="fmain" data-fopen="${esc(f.id)}"><span class="fk" style="--fk:${k[1]}">${k[0]}</span>
     <span class="fmt"><b>${esc(f.name)}</b><span>${fmtSize(f.size)}${saved}・${f.by==='claude'?'Claude':esc(pname(f.by))}${f.via==='claude'&&f.by!=='claude'?'（Claude経由）':''}・${fmtDate(f.createdAt)}${fd?`・${esc(fd.name)}`:''}</span></span></button>
@@ -1448,7 +1505,7 @@ function fileRow(f,showFolder){
 function docsBody(){
   const q=(S.docsQ||'').trim().toLowerCase();
   if(q){
-    const hits=S.files.filter(f=>(f.name||'').toLowerCase().includes(q)||(f.origName||'').toLowerCase().includes(q));
+    const hits=S.files.filter(f=>[f.name,f.origName,f.url,f.note].some(x=>(x||'').toLowerCase().includes(q)));
     const fh=S.folders.filter(f=>(f.name||'').toLowerCase().includes(q));
     return `${fh.length?`<div class="fgrid">${fh.map(folderCard).join('')}</div>`:''}
       <div class="flist">${hits.length?hits.map(f=>fileRow(f,true)).join(''):''}</div>${!hits.length&&!fh.length?empty('見つかりませんでした'):''}`;
@@ -1469,7 +1526,7 @@ function folderView(){
   return `<div class="fhead"><button type="button" class="icon-btn" data-foldback aria-label="フォルダ一覧に戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m14.5 6-6 6 6 6"/></svg></button>
     <span class="fic">${FOLDER_SVG(f.color||'#FFA41B')}</span><h1 class="pg" style="margin:0;flex:1;min-width:0;overflow-wrap:anywhere">${esc(f.name)}</h1>
     ${canManage(f)?`<button type="button" class="btn ghost" data-foldedit="${esc(f.id)}" style="padding:7px 12px;font-size:13px">編集</button>`:''}</div>
-    <p class="hint" style="margin:4px 0 14px">作成：${esc(pname(f.by))}・写真は自動で軽く変換して保存されます（1ファイル15MBまで）</p>
+    <p class="hint" style="margin:4px 0 14px">作成：${esc(pname(f.by))}・写真は自動で軽くして保存。15MBを超えるものはリンクで追加できます</p>
     ${items.length?`<div class="flist">${items.map(x=>fileRow(x,false)).join('')}</div>`:empty('まだ資料がありません','右下の「ファイルを追加」から保存できます')}`;
 }
 
