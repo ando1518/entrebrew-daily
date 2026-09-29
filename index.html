@@ -347,6 +347,12 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 a.fmain{color:inherit;text-decoration:none}
 .fnote{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--muted)}
 .rlink{color:var(--sky);font-weight:700;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+.tref-wrap{flex-basis:100%;padding-left:40px}
+.task{flex-wrap:wrap}
+.tref{display:inline-flex;align-items:center;gap:6px;max-width:100%;border:1.5px solid var(--line);background:var(--surface2);border-radius:10px;padding:4px 10px;font-size:12.5px;font-weight:700;color:var(--sky);text-decoration:none;overflow-wrap:anywhere;text-align:left}
+.tref::before{content:"";width:14px;height:14px;flex:none;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'/%3E%3C/svg%3E") center/contain no-repeat}
+.mk{margin-left:auto;background:none;border:0;color:var(--accent-ink);font-size:12.5px;font-weight:800;padding:4px 6px}
+.mk+.del{margin-left:0}
 /* sheet */
 .back{position:fixed;inset:0;background:var(--scrim);z-index:30;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;animation:up .18s ease-out}
@@ -453,8 +459,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.7.0';
+const APP_VERSION='1.8.0';
 const CHANGELOG=[
+  {v:'1.8.0',date:'2026-09-29',items:['報告や資料から、ボタン1つでタスクを作れるようになりました（参考資料のリンク付き）','TeamsやSharePointのリンクを「Teams・SharePoint」と表示するようにしました']},
   {v:'1.7.0',date:'2026-09-29',items:['報告・連絡に貼ったリンク（Googleドライブなど）も、自動で資料フォルダに登録されるようになりました','報告・連絡の添付ファイルは、指定がなければ「報告・連絡の資料」フォルダに自動で保存されます','フォルダにリンクを追加できるようになりました']},
   {v:'1.6.1',date:'2026-09-28',items:['資料フォルダが読み込めないときに「まだ参加できません」と表示され、アプリが使えなくなる不具合を修正']},
   {v:'1.6.0',date:'2026-09-28',items:['TODOを「資料」フォルダに変更しました。フォルダはだれでも作成・追加できます','報告にファイルを添付できるようになりました。本文に「〇〇フォルダに保存」と書くと、そのフォルダに保存されます','写真は自動で軽く変換して保存します']},
@@ -646,7 +653,7 @@ function taskCard(t){
       <b>${esc(t.title)}</b>
       <div class="t-meta"><span class="pill p-${s}">${STATUS[s]}</span>${dueChip(t.due,s==='done')}
       ${t.assignee?`<span class="who-sm">${av(t.assignee,'sm')}${esc(pname(t.assignee))}</span>`:''}${(t.depts||[]).map(dpill).join('')}</div>
-    </div></div>`;
+    </div>${t.link||t.fileId?`<div class="tref-wrap">${refChip(t)}</div>`:''}</div>`;
 }
 function richBody(b){
   return esc(b).replace(/@\{g:([^}]{1,20})\}/g,(_,d0)=>{const d=normDept(d0);return `<span class="mention grp ${deptHitsMe([d])?'me':''}">@${d}</span>`;})
@@ -670,6 +677,7 @@ function reportCard(r){
     <div class="r-foot">
       <button class="ack ${mine?'on':''}" type="button" data-ack="${esc(r.id)}">${CHECK}${mine?'確認済み':'確認しました'}</button>
       ${acks.length?`<span class="stack">${acks.slice(0,4).map(i=>av(i,'sm')).join('')}</span><span class="ack-n">${acks.length}人が確認</span>`:''}
+      <button class="mk" type="button" data-mkr="${esc(r.id)}">タスクにする</button>
       ${own?`<button class="del" type="button" data-delrep="${esc(r.id)}">削除</button>`:''}
     </div></article>`;
 }
@@ -841,12 +849,18 @@ function mountPicker(el,init){
   return ()=>val;
 }
 
-function taskSheet(id){
+function refChip(o){
+  if(o.link)return `<a class="tref" href="${esc(o.link)}" target="_blank" rel="noopener noreferrer">${esc(o.refName||linkName(o.link))}</a>`;
+  if(o.fileId)return `<button type="button" class="tref" data-fopen="${esc(o.fileId)}">${esc(o.refName||'資料')}</button>`;
+  return '';
+}
+function taskSheet(id,preset){
   const t=id?S.tasks.find(x=>x.id===id):null;if(id&&!t)return;
-  const d=t||{title:'',detail:'',assignee:S.me.id,due:'',status:'todo'};
+  const d=t||{title:'',detail:'',assignee:S.me.id,due:'',status:'todo',...(preset||{})};
   openSheet(`<form id="f"><h2>${t?'タスクを編集':'タスクを追加'}</h2>
     <label class="fld">タイトル<input id="fTitle" maxlength="100" required value="${esc(d.title)}" placeholder="例：新商品の仕入れ先に見積もり依頼"></label>
     <label class="fld">詳細<textarea id="fDetail" maxlength="1000" placeholder="必要なら補足を書きます">${esc(d.detail||'')}</textarea></label>
+    ${d.link||d.fileId?`<div class="fld">参考資料<div>${refChip(d)}</div></div>`:''}
     <div class="fld">担当
       <div class="seg" id="aTab" style="margin:0"><button type="button" data-a="p" class="on">個人</button><button type="button" data-a="d">部門<span class="ct" id="aDn"></span></button></div>
       <div class="picker" id="pk"></div>
@@ -868,6 +882,7 @@ function taskSheet(id){
   $('#f').addEventListener('submit',async e=>{
     e.preventDefault();
     const data={title:$('#fTitle').value.trim(),detail:$('#fDetail').value.trim(),assignee:getA()||null,depts:DEPTS.filter(x=>tsel.has(x)),due:$('#fDue').value||'',status:st,updatedAt:Date.now()};
+    if(!t&&(d.link||d.fileId)){data.link=d.link||'';data.fileId=d.fileId||'';data.refName=d.refName||'';if(d.fromReport)data.fromReport=d.fromReport;}
     if(!data.title)return;
     closeSheet();
     const ok=t?await upd('tasks',id,data):await add('tasks',{...data,createdBy:S.me.id,createdAt:Date.now()});
@@ -1124,14 +1139,29 @@ function setView(v){
 
 /* ---------- events ---------- */
 document.addEventListener('click',async e=>{
+  if(e.target.closest('a.tref,a.rlink,a.fmain'))return;
   if(e.target.closest('[data-logout]')){closeSheet();if(pushGet())await disablePush(true);if(auth)auth.signOut();return;}
-  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-rmatt],#fab');
+  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-mkr],[data-mkf],[data-rmatt],#fab');
   if(!g){if(e.target.id==='back')closeSheet();return;}
   const ds=g.dataset;
   if('rmatt' in ds)return;
   if(ds.fold){closeSheet();S.folderOpen=ds.fold;S.docsQ='';if(S.view!=='docs')setView('docs');else{paint();window.scrollTo(0,0);}return;}
   if('foldback' in ds){S.folderOpen=null;paint();return;}
   if(ds.foldedit){folderSheet(ds.foldedit);return;}
+  if(ds.mkr){
+    const r=S.reports.find(x=>x.id===ds.mkr);if(!r)return;
+    const plain=(r.body||'').replace(/@\{g:([^}]{1,20})\}/g,(_,d)=>'@'+normDept(d)).replace(/@\{([A-Za-z0-9_\-.~:+]+)\}/g,(_,id)=>'@'+pname(id));
+    const urls=findUrls(plain),first=(plain.replace(URL_RE,'').split('\n').map(x=>x.trim()).find(Boolean)||'報告の対応').slice(0,60);
+    const f0=(r.files||[])[0];
+    taskSheet(null,{title:first,detail:`${plain}\n\n（${pname(r.author)}さんの${r.cat||'報告'}より）`.slice(0,1000),
+      link:urls[0]||'',fileId:urls[0]?'':(f0?f0.id:''),refName:urls[0]?linkName(urls[0]):(f0?f0.name:''),fromReport:r.id});
+    return;
+  }
+  if(ds.mkf){
+    const f=S.files.find(x=>x.id===ds.mkf);if(!f)return;
+    taskSheet(null,{title:`「${f.name.length>30?f.name.slice(0,30)+'…':f.name}」を確認する`,detail:f.note?`メモ：${f.note}`:'',link:f.url||'',fileId:f.url?'':f.id,refName:f.name});
+    return;
+  }
   if(ds.fcopy){const f=S.files.find(x=>x.id===ds.fcopy);if(f&&f.url){try{await navigator.clipboard.writeText(f.url);toast('リンクをコピーしました');}catch(err){toast(f.url);}}return;}
   if(ds.fopen){openFile(ds.fopen,false);return;}
   if(ds.fsave){openFile(ds.fsave,true);return;}
@@ -1302,7 +1332,7 @@ const URL_RE=/https?:\/\/[^\s<>"'「」『』（）()【】]+/g;
 const findUrls=t=>[...new Set(((t||'').match(URL_RE)||[]).map(u=>u.replace(/[。、．，.,!?！？)）\]]+$/,'')))].slice(0,10);
 const LINK_SITES=[[/docs\.google\.com\/document/,'Googleドキュメント'],[/docs\.google\.com\/spreadsheets/,'Googleスプレッドシート'],[/docs\.google\.com\/presentation/,'Googleスライド'],
   [/docs\.google\.com\/forms|forms\.gle/,'Googleフォーム'],[/drive\.google\.com/,'Googleドライブ'],[/(youtube\.com|youtu\.be)/,'YouTube'],[/dropbox\.com/,'Dropbox'],
-  [/(onedrive\.live\.com|1drv\.ms|sharepoint\.com)/,'OneDrive'],[/canva\.com/,'Canva'],[/notion\.(so|site)/,'Notion'],[/figma\.com/,'Figma'],[/box\.com/,'Box']];
+  [/teams\.microsoft\.com|teams\.live\.com/,'Teams'],[/sharepoint\.com/,'Teams・SharePoint'],[/(onedrive\.live\.com|1drv\.ms)/,'OneDrive'],[/canva\.com/,'Canva'],[/notion\.(so|site)/,'Notion'],[/figma\.com/,'Figma'],[/box\.com/,'Box']];
 function linkName(url){
   let host='',path='';try{const u=new URL(url);host=u.hostname.replace(/^www\./,'');path=decodeURIComponent(u.pathname).replace(/\/+$/,'');}catch(e){return url.slice(0,60);}
   const site=(LINK_SITES.find(([re])=>re.test(url))||[])[1];
@@ -1493,12 +1523,14 @@ function fileRow(f,showFolder){
   if(f.type==='link'){
     return `<div class="frow"><a class="fmain" href="${esc(f.url)}" target="_blank" rel="noopener noreferrer"><span class="fk" style="--fk:${k[1]}">${k[0]}</span>
     <span class="fmt"><b>${esc(f.name)}</b><span>${esc(linkHost(f.url))}・${f.by==='claude'?'Claude':esc(pname(f.by))}・${fmtDate(f.createdAt)}${fd?`・${esc(fd.name)}`:''}</span>${f.note?`<span class="fnote">${esc(f.note)}</span>`:''}</span></a>
+    <button type="button" class="x" data-mkf="${esc(f.id)}" aria-label="この資料からタスクを作る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="4"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></button>
     <button type="button" class="x" data-fcopy="${esc(f.id)}" aria-label="リンクをコピー"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></svg></button>
     ${canManage(f)?`<button type="button" class="x" data-fdel="${esc(f.id)}" aria-label="削除">${XIC}</button>`:''}</div>`;
   }
   const saved=f.origSize&&f.origSize>f.size*1.05?`<span class="shrink">元 ${fmtSize(f.origSize)}</span>`:'';
   return `<div class="frow"><button type="button" class="fmain" data-fopen="${esc(f.id)}"><span class="fk" style="--fk:${k[1]}">${k[0]}</span>
     <span class="fmt"><b>${esc(f.name)}</b><span>${fmtSize(f.size)}${saved}・${f.by==='claude'?'Claude':esc(pname(f.by))}${f.via==='claude'&&f.by!=='claude'?'（Claude経由）':''}・${fmtDate(f.createdAt)}${fd?`・${esc(fd.name)}`:''}</span></span></button>
+    <button type="button" class="x" data-mkf="${esc(f.id)}" aria-label="この資料からタスクを作る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="4"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></button>
     <button type="button" class="x" data-fsave="${esc(f.id)}" aria-label="端末に保存"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg></button>
     ${canManage(f)?`<button type="button" class="x" data-fdel="${esc(f.id)}" aria-label="削除">${XIC}</button>`:''}</div>`;
 }
