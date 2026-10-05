@@ -359,6 +359,19 @@ a.fmain{color:inherit;text-decoration:none}
 .rx.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
 .ntf-chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;font-weight:700;color:var(--ink)}
 .ntf-chk input{width:20px;height:20px;margin:1px 0 0;flex:none;accent-color:var(--accent)}
+.tchips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin:-2px 0 12px;scrollbar-width:none}
+.tchips::-webkit-scrollbar{display:none}
+.tchip{flex:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap}
+.tchip[style]::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--dc)}
+.tchip .ct{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700}
+.tchip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.tchip.on .ct{color:var(--bg);opacity:.75}
+.tgrp{display:grid;gap:8px;margin-bottom:14px}
+.tgrp-h{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;padding:4px 2px;text-align:left}
+.tgrp-h .sw{width:12px;height:12px;border-radius:4px;background:var(--dc);flex:none}
+.tgrp-h .nm{font-family:var(--font-d);font-weight:800;font-size:16px}
+.tgrp-h .chev{width:18px;height:18px;color:var(--muted);margin-left:auto;transform:rotate(90deg);transition:transform .15s}
+.tgrp.shut .tgrp-h .chev{transform:none}
 /* sheet */
 .back{position:fixed;inset:0;background:var(--scrim);z-index:30;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;animation:up .18s ease-out}
@@ -466,8 +479,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.9.0';
+const APP_VERSION='1.10.0';
 const CHANGELOG=[
+  {v:'1.10.0',date:'2026-10-05',items:['タスクを部門ごとに分けて表示するようにしました（見出しを押すと折りたためます）','上の部門ボタンで、1つの部門のタスクだけに絞り込めます']},
   {v:'1.9.0',date:'2026-09-29',items:['通知を強化：自分・自分の部署・@全員 がメンションされたら知らせます','朝と夜の好きな時刻に、新しい報告や未確認の連絡・タスクをまとめてお知らせ（右上のベルで設定）','「@全員」で全員にメンションできるようになりました','報告に「いいね」「ありがとう」などのリアクションを付けられるようになりました','通知が届かなかった不具合を修正']},
   {v:'1.8.0',date:'2026-09-29',items:['報告や資料から、ボタン1つでタスクを作れるようになりました（参考資料のリンク付き）','TeamsやSharePointのリンクを「Teams・SharePoint」と表示するようにしました']},
   {v:'1.7.0',date:'2026-09-29',items:['報告・連絡に貼ったリンク（Googleドライブなど）も、自動で資料フォルダに登録されるようになりました','報告・連絡の添付ファイルは、指定がなければ「報告・連絡の資料」フォルダに自動で保存されます','フォルダにリンクを追加できるようになりました']},
@@ -491,7 +505,7 @@ function updCard(){
     <div class="actions"><button type="button" class="btn ghost" data-about>更新履歴を見る</button><span class="sp"></span><button type="button" class="btn primary" data-seen>OK</button></div></section>`;
 }
 
-const S={view:'home',tasks:[],reports:[],events:[],todos:[],folders:[],files:[],folderOpen:null,docsQ:'',members:{},membersLoaded:false,orgOpen:new Set(),myFb:[],seenOk:false,me:{id:null,name:'',avatarUrl:'',color:'#5B716B'},
+const S={taskDept:'',taskShut:new Set(),view:'home',tasks:[],reports:[],events:[],todos:[],folders:[],files:[],folderOpen:null,docsQ:'',members:{},membersLoaded:false,orgOpen:new Set(),myFb:[],seenOk:false,me:{id:null,name:'',avatarUrl:'',color:'#5B716B'},
   canWrite:true,preview:false,loaded:false,taskFilter:'mine',repFilter:'all',calMonth:null,calSel:today(),P:{}};
 const FIREBASE_CONFIG={
   apiKey:"AIzaSyAp7rKbZ6-HquNd31RxhA5E74e7m6CgaeQ",
@@ -547,6 +561,15 @@ function deptHitsMe(ds){
   if(!ds||!ds.length)return false;
   if(isBoard())return true;
   const md=myDepts();return ds.some(d=>md.includes(d));
+}
+const NO_DEPT='部門なし';
+// タスクの部門：部門指定があればその部門、なければ担当者の所属部署（取締役会の人の個人タスクは取締役会）
+function taskDepts(t){
+  const ds=normDepts(t.depts||[]).filter(d=>DEPTS.includes(d));
+  if(ds.length)return ds;
+  const m=t.assignee&&S.members[t.assignee];
+  const md=((m&&m.depts)||[]).map(normDept).filter(d=>DEPTS.includes(d));
+  return md.includes(BOARD)?[BOARD]:md;
 }
 const isMyTask=t=>!!S.me.id&&(t.assignee===S.me.id||deptHitsMe(t.depts));
 const OK_SVG='<svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
@@ -751,8 +774,20 @@ tasks(){
   let list=f==='done'?done.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)):(f==='all'?open:open.filter(isMyTask)).slice().sort((a,b)=>byDue(a,b)||((b.status==="doing")-(a.status==="doing")));
   const seg=[['mine','自分',mineN],['all','全員',open.length],['done','完了',done.length]]
     .map(([k,l,n])=>`<button type="button" data-tf="${k}" class="${f===k?'on':''}">${l}<span class="ct">${n}</span></button>`).join('');
-  return `${roNote()}<h1 class="pg">タスク</h1><div class="seg" role="tablist">${seg}</div>${loading()}
-  <div class="list">${list.length?list.map(taskCard).join(''):empty(f==='done'?'完了したタスクはまだありません':'タスクはありません','右下の「タスク追加」から作成できます')}</div>`;
+  // 部門ごとに分類（部門指定のタスクはその部門、個人あてのタスクは担当者の所属部署）
+  const groups=[...DEPTS,NO_DEPT].map(d=>[d,list.filter(t=>taskDepts(t).includes(d)||(d===NO_DEPT&&!taskDepts(t).length))]).filter(([,ts])=>ts.length);
+  if(S.taskDept&&!groups.some(([d])=>d===S.taskDept))S.taskDept='';
+  const chips=groups.length>1?`<div class="tchips" role="tablist" aria-label="部門で絞り込み"><button type="button" class="tchip ${S.taskDept?'':'on'}" data-tdept="">すべて<span class="ct">${list.length}</span></button>${groups.map(([d,ts])=>`<button type="button" class="tchip ${S.taskDept===d?'on':''}" data-tdept="${esc(d)}" style="--dc:${DC[d]||'var(--muted)'}">${esc(d)}<span class="ct">${ts.length}</span></button>`).join('')}</div>`:'';
+  let body;
+  if(!list.length)body=empty(f==='done'?'完了したタスクはまだありません':'タスクはありません','右下の「タスク追加」から作成できます');
+  else if(S.taskDept)body=`<div class="list">${(groups.find(([d])=>d===S.taskDept)||[,[]])[1].map(taskCard).join('')}</div>`;
+  else if(groups.length<=1)body=`<div class="list">${list.map(taskCard).join('')}</div>`;
+  else body=groups.map(([d,ts])=>{
+    const shut=S.taskShut.has(d),over=f==='done'?0:ts.filter(t=>t.due&&dayDiff(t.due)<0).length;
+    return `<section class="tgrp ${shut?'shut':''}" style="--dc:${DC[d]||'var(--muted)'}"><button type="button" class="tgrp-h" data-tgrp="${esc(d)}" aria-expanded="${!shut}">
+      <span class="sw"></span><span class="nm">${esc(d)}</span><span class="pill p-todo">${ts.length}件</span>${over?`<span class="due over">期限切れ${over}</span>`:''}${CHEV}</button>
+      ${shut?'':`<div class="list">${ts.map(taskCard).join('')}</div>`}</section>`;}).join('');
+  return `${roNote()}<h1 class="pg">タスク</h1><div class="seg" role="tablist">${seg}</div>${chips}${loading()}${body}`;
 },
 reports(){
   const f=S.repFilter;
@@ -1153,7 +1188,7 @@ function setView(v){
 document.addEventListener('click',async e=>{
   if(e.target.closest('a.tref,a.rlink,a.fmain'))return;
   if(e.target.closest('[data-logout]')){closeSheet();if(pushGet())await disablePush(true);if(auth)auth.signOut();return;}
-  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-mkr],[data-mkf],[data-react],[data-rmatt],#fab');
+  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-tdept],[data-tgrp],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-mkr],[data-mkf],[data-react],[data-rmatt],#fab');
   if(!g){if(e.target.id==='back')closeSheet();return;}
   const ds=g.dataset;
   if('rmatt' in ds)return;
@@ -1204,6 +1239,8 @@ document.addEventListener('click',async e=>{
   if(ds.go){if(ds.rf)S.repFilter=ds.rf;setView(ds.go);return;}
   if(ds.rf){S.repFilter=ds.rf;paint();return;}
   if(ds.tf){S.taskFilter=ds.tf;paint();return;}
+  if(ds.tdept!==undefined&&g.classList.contains('tchip')){S.taskDept=ds.tdept;paint();return;}
+  if(ds.tgrp){if(S.taskShut.has(ds.tgrp))S.taskShut.delete(ds.tgrp);else S.taskShut.add(ds.tgrp);paint();return;}
   if(ds.task){taskSheet(ds.task);return;}
   if(ds.ev){eventSheet(ds.ev);return;}
   if(ds.day){S.calSel=ds.day;const d=parse(ds.day);if(d.getMonth()!==S.calMonth.getMonth()){S.calMonth=new Date(d.getFullYear(),d.getMonth(),1);}paint();return;}
