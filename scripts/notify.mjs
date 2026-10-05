@@ -1,6 +1,7 @@
 // EntreBrew Daily の通知（GitHub Actions から5分ごとに実行）
 //  1. メンション通知：新しい報告・連絡で、自分・自分の部署・@全員 がメンションされたら、すぐ知らせる
-//  2. 朝と夜のまとめ：各自が選んだ時刻に、新しい報告・未確認の連絡・タスクなどがあれば知らせる
+//  2. コメント通知：報告にコメントが付いたら、報告者と、同じ報告にコメントした人に知らせる
+//  3. 朝と夜のまとめ：各自が選んだ時刻に、新しい報告・未確認の連絡・タスクなどがあれば知らせる
 import admin from 'firebase-admin';
 
 const APP_URL = process.env.APP_URL || 'https://ando1518.github.io/entrebrew-daily/';
@@ -32,7 +33,7 @@ const plain = (b, members) => (b || '')
   .replace(/\s+/g, ' ').trim();
 const clip = (s, n) => s.length > n ? s.slice(0, n - 1) + '…' : s;
 
-let stats = { mention: 0, digest: 0, removed: 0, failed: 0 };
+let stats = { mention: 0, comment: 0, digest: 0, removed: 0, failed: 0 };
 const deadTokens = new Set();
 
 async function send(messages) {
@@ -103,7 +104,45 @@ async function main() {
   if (mentionMsgs.length) { await send(mentionMsgs); stats.mention = mentionMsgs.length; }
   if (!testEmail) await stateRef.set({ lastReportAt: last, lastRunAt: nowMs }, { merge: true });
 
-  // ---------- 2. 朝と夜のまとめ ----------
+  // ---------- 2. コメント通知 ----------
+  const cSince = state.lastCommentAt || (nowMs - 10 * 60e3);
+  let cLast = cSince;
+  try {
+    const cSnap = await db.collection('comments').where('createdAt', '>', cSince).orderBy('createdAt').limit(200).get();
+    const cMsgs = [], repCache = {};
+    for (const d of cSnap.docs) {
+      const c = d.data();
+      cLast = Math.max(cLast, c.createdAt || 0);
+      if (!c.reportId) continue;
+      if (!(c.reportId in repCache)) {
+        const [rs, others] = await Promise.all([
+          db.collection('reports').doc(c.reportId).get(),
+          db.collection('comments').where('reportId', '==', c.reportId).get(),
+        ]);
+        repCache[c.reportId] = { r: rs.exists ? rs.data() : null, all: others.docs.map(x => x.data()) };
+      }
+      const { r, all } = repCache[c.reportId];
+      if (!r) continue;
+      const who = new Set([r.author]);
+      all.forEach(x => { if ((x.createdAt || 0) < (c.createdAt || 0) && x.author) who.add(x.author); });
+      who.delete(c.author);
+      const name = (members[c.author] || {}).name || 'メンバー';
+      const body = clip(plain(c.body, members), 120);
+      for (const u of who) {
+        const title = u === r.author ? `${name}さんがあなたの報告にコメント` : `${name}さんが報告にコメント`;
+        for (const t of byUid[u] || []) {
+          if (t.mention === false) continue;
+          cMsgs.push(msg(t.id, title, body, '#reports', 'eb-c-' + c.reportId));
+        }
+      }
+    }
+    if (cMsgs.length) { await send(cMsgs); stats.comment = cMsgs.length; }
+    if (!testEmail) await stateRef.set({ lastCommentAt: cLast }, { merge: true });
+  } catch (e) {
+    console.log('コメント通知をスキップしました:', e.message || e);
+  }
+
+  // ---------- 3. 朝と夜のまとめ ----------
   const due = [];
   for (const t of tokens) {
     const mh = t.hour === null || t.hour === -1 ? null : Number(t.hour ?? DEFAULT_MORNING);
@@ -160,8 +199,8 @@ async function main() {
   }
 
   for (const tk of deadTokens) { await db.collection('pushTokens').doc(tk).delete().catch(() => {}); stats.removed++; }
-  console.log(`メンション通知 ${stats.mention} 件 / まとめ ${stats.digest} 件 / 無効な端末の削除 ${stats.removed} 件 / 失敗 ${stats.failed} 件`);
-  console.log(`::notice::通知オンの端末 ${tokens.length} 台 / メンション通知 ${stats.mention} 件 / まとめ ${stats.digest} 件 / 無効端末の削除 ${stats.removed} 件 / 失敗 ${stats.failed} 件`);
+  console.log(`メンション通知 ${stats.mention} 件 / コメント通知 ${stats.comment} 件 / まとめ ${stats.digest} 件 / 無効な端末の削除 ${stats.removed} 件 / 失敗 ${stats.failed} 件`);
+  console.log(`::notice::通知オンの端末 ${tokens.length} 台 / メンション通知 ${stats.mention} 件 / コメント通知 ${stats.comment} 件 / まとめ ${stats.digest} 件 / 無効端末の削除 ${stats.removed} 件 / 失敗 ${stats.failed} 件`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

@@ -372,6 +372,28 @@ a.fmain{color:inherit;text-decoration:none}
 .tgrp-h .nm{font-family:var(--font-d);font-weight:800;font-size:16px}
 .tgrp-h .chev{width:18px;height:18px;color:var(--muted);margin-left:auto;transform:rotate(90deg);transition:transform .15s}
 .tgrp.shut .tgrp-h .chev{transform:none}
+.cmt-bar{margin-top:10px}
+.cmt-tg{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:2px 0;color:var(--muted);font-size:13px;font-weight:700}
+.cmt-tg svg{width:16px;height:16px}
+.cmt-tg.on{color:var(--accent-ink)}
+.cmts{display:grid;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.cmt{display:flex;gap:8px;align-items:flex-start}
+.cmt .av{margin-top:2px}
+.cmt-b{flex:1;min-width:0;background:var(--surface2);border-radius:12px;padding:7px 10px}
+.cmt-h{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--muted)}
+.cmt-h b{color:var(--ink);font-size:13px}
+.cmt-b p{margin:2px 0 0;font-size:14px;overflow-wrap:anywhere}
+.cmt-del{margin-left:auto;border:0;background:none;color:var(--muted);font-size:12px;font-weight:700;padding:0}
+.cmt-del.armed{color:var(--cherry)}
+.cmt-load{margin:0;font-size:13px}
+.cmt-f{display:flex;gap:8px;align-items:flex-end}
+.cmt-f textarea{min-height:40px;resize:none;padding:9px 12px;font-size:16px;line-height:1.4}
+.cmt-f .btn{padding:9px 14px;font-size:14px;flex:none}
+.ack-who{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:2px 4px;border-radius:8px}
+.ack-who .ack-n{color:var(--sky);font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.ack-list{display:grid;gap:4px}
+.ack-row{display:flex;align-items:center;gap:8px;font-size:14px;padding:4px 0}
+.ack-row .muted{margin-left:auto;font-size:12px}
 /* sheet */
 .back{position:fixed;inset:0;background:var(--scrim);z-index:30;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;animation:up .18s ease-out}
@@ -479,8 +501,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.10.0';
+const APP_VERSION='1.11.0';
 const CHANGELOG=[
+  {v:'1.11.0',date:'2026-10-05',items:['報告にコメントできるようになりました（報告者や同じ報告にコメントした人に通知が届きます）','報告者は「確認 ○/○人」を押すと、確認した人とまだの人を見られるようになりました']},
   {v:'1.10.0',date:'2026-10-05',items:['タスクを部門ごとに分けて表示するようにしました（見出しを押すと折りたためます）','上の部門ボタンで、1つの部門のタスクだけに絞り込めます']},
   {v:'1.9.0',date:'2026-09-29',items:['通知を強化：自分・自分の部署・@全員 がメンションされたら知らせます','朝と夜の好きな時刻に、新しい報告や未確認の連絡・タスクをまとめてお知らせ（右上のベルで設定）','「@全員」で全員にメンションできるようになりました','報告に「いいね」「ありがとう」などのリアクションを付けられるようになりました','通知が届かなかった不具合を修正']},
   {v:'1.8.0',date:'2026-09-29',items:['報告や資料から、ボタン1つでタスクを作れるようになりました（参考資料のリンク付き）','TeamsやSharePointのリンクを「Teams・SharePoint」と表示するようにしました']},
@@ -505,7 +528,7 @@ function updCard(){
     <div class="actions"><button type="button" class="btn ghost" data-about>更新履歴を見る</button><span class="sp"></span><button type="button" class="btn primary" data-seen>OK</button></div></section>`;
 }
 
-const S={taskDept:'',taskShut:new Set(),view:'home',tasks:[],reports:[],events:[],todos:[],folders:[],files:[],folderOpen:null,docsQ:'',members:{},membersLoaded:false,orgOpen:new Set(),myFb:[],seenOk:false,me:{id:null,name:'',avatarUrl:'',color:'#5B716B'},
+const S={cmtOpen:new Set(),comments:{},cmtSubs:{},cmtDraft:{},taskDept:'',taskShut:new Set(),view:'home',tasks:[],reports:[],events:[],todos:[],folders:[],files:[],folderOpen:null,docsQ:'',members:{},membersLoaded:false,orgOpen:new Set(),myFb:[],seenOk:false,me:{id:null,name:'',avatarUrl:'',color:'#5B716B'},
   canWrite:true,preview:false,loaded:false,taskFilter:'mine',repFilter:'all',calMonth:null,calSel:today(),P:{}};
 const FIREBASE_CONFIG={
   apiKey:"AIzaSyAp7rKbZ6-HquNd31RxhA5E74e7m6CgaeQ",
@@ -660,8 +683,10 @@ function paint(){
   const v=$('#view');
   const vk=S.view==='docs'?'docs:'+(S.folderOpen||''):S.view;
   if(vk==='docs:'&&v.dataset.v===vk&&$('#docsBody')){$('#docsBody').innerHTML=docsBody();return;}
+  const ae=document.activeElement,aid=ae&&v.contains(ae)&&ae.id,ss=aid&&ae.selectionStart,se=aid&&ae.selectionEnd;
   v.innerHTML=(VIEWS[S.view]||VIEWS.home)();
   v.dataset.v=vk;
+  if(aid){const el=document.getElementById(aid);if(el){el.focus({preventScroll:true});try{el.setSelectionRange(ss,se);}catch(e){}}}
 }
 function roNote(){return (!S.canWrite&&S.loaded&&!S.preview)?'<div class="readonly">閲覧のみの権限です。</div>':'';}
 function empty(t,s){return `<div class="empty"><b>${t}</b>${s||''}</div>`;}
@@ -708,12 +733,91 @@ function reportCard(r){
     ${r.folderId&&S.folders.some(x=>x.id===r.folderId)?`<button type="button" class="link saved-to" data-fold="${esc(r.folderId)}">「${esc(S.folders.find(x=>x.id===r.folderId).name)}」フォルダに保存済み</button>`:''}
     <div class="reacts">${REACTS.map(([k,e,l])=>{const who=Object.entries((r.reacts||{})[k]||{}).filter(([,v])=>v).map(([u])=>u);const on=who.includes(S.me.id);
       return `<button type="button" class="rx ${on?'on':''}" data-react="${esc(r.id)}|${k}" aria-pressed="${on}" aria-label="${l}${who.length?`（${who.length}人）`:''}" title="${esc(who.length?who.map(pname).join('、'):l)}"><span class="e">${e}</span>${who.length?`<span>${who.length}</span>`:`<span class="rl">${l}</span>`}</button>`;}).join('')}</div>
+    ${commentBar(r)}
     <div class="r-foot">
       <button class="ack ${mine?'on':''}" type="button" data-ack="${esc(r.id)}">${CHECK}${mine?'確認済み':'確認しました'}</button>
-      ${acks.length?`<span class="stack">${acks.slice(0,4).map(i=>av(i,'sm')).join('')}</span><span class="ack-n">${acks.length}人が確認</span>`:''}
+      ${ackSummary(r,acks,own)}
       <button class="mk" type="button" data-mkr="${esc(r.id)}">タスクにする</button>
       ${own?`<button class="del" type="button" data-delrep="${esc(r.id)}">削除</button>`:''}
     </div></article>`;
+}
+/* ---------- 確認した人 ---------- */
+// 報告の宛先（メンションされた人・部署の人・@全員）。報告者自身は除く
+function recipientsOf(r){
+  const set=new Set(r.mentions||[]);
+  normDepts(r.depts||[]).forEach(d=>deptMembers(d).forEach(u=>set.add(u)));
+  if(r.all)Object.keys(S.members).forEach(u=>set.add(u));
+  set.delete(r.author);
+  return [...set];
+}
+const canSeeAcks=r=>!!S.me.id&&(r.author===S.me.id||isBoard());
+function ackSummary(r,acks,own){
+  const rc=recipientsOf(r),done=rc.filter(u=>acks.includes(u)).length;
+  const stack=acks.length?`<span class="stack">${acks.slice(0,4).map(i=>av(i,'sm')).join('')}</span>`:'';
+  if(canSeeAcks(r)&&(acks.length||rc.length)){
+    const label=rc.length?`確認 ${done}/${rc.length}人`:`${acks.length}人が確認`;
+    return `<button type="button" class="ack-who" data-acks="${esc(r.id)}">${stack}<span class="ack-n">${label}</span></button>`;
+  }
+  return acks.length?`${stack}<span class="ack-n">${acks.length}人が確認</span>`:'';
+}
+function ackSheet(id){
+  const r=S.reports.find(x=>x.id===id);if(!r)return;
+  const ak=r.acks||{},rc=recipientsOf(r);
+  const yes=Object.entries(ak).filter(([,v])=>v).sort((a,b)=>(a[1]||0)-(b[1]||0));
+  const no=rc.filter(u=>!ak[u]).sort(byName);
+  const when=v=>typeof v==='number'&&v>1e12?ago(v):'';
+  const row=(u,t)=>`<div class="ack-row">${av(u,'sm')}<span>${esc(pname(u))}</span><span class="muted">${t}</span></div>`;
+  openSheet(`<div class="about"><h2>確認した人</h2>
+    <p class="intro" style="margin:0">${esc(plainText(r.body).slice(0,60))}${plainText(r.body).length>60?'…':''}</p>
+    <h3>確認済み（${yes.length}人）</h3><div class="ack-list">${yes.length?yes.map(([u,v])=>row(u,when(v))).join(''):'<p class="muted" style="margin:0">まだいません</p>'}</div>
+    ${rc.length?`<h3>まだ確認していない人（${no.length}人）</h3><div class="ack-list">${no.length?no.map(u=>row(u,'')).join(''):'<p class="muted" style="margin:0">全員が確認しました</p>'}</div>`
+      :'<p class="hint" style="margin:0">メンションのない報告なので、「まだ確認していない人」は表示されません。</p>'}
+    <div class="actions"><span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button></div></div>`);
+}
+const plainText=b=>(b||'').replace(/@\{all\}/g,'@全員').replace(/@\{g:([^}]{1,20})\}/g,(_,d)=>'@'+normDept(d)).replace(/@\{([A-Za-z0-9_\-.~:+]+)\}/g,(_,id)=>'@'+pname(id));
+
+/* ---------- コメント ---------- */
+const CMT_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-5 4v-4.5"/></svg>';
+function commentBar(r){
+  const n=r.cmt||0,open=S.cmtOpen.has(r.id);
+  return `<div class="cmt-bar"><button type="button" class="cmt-tg ${open?'on':''}" data-cmt="${esc(r.id)}" aria-expanded="${open}">${CMT_SVG}${n>0?`コメント ${n}件`:'コメントする'}</button></div>${open?commentThread(r):''}`;
+}
+function commentThread(r){
+  const list=S.comments[r.id];
+  const body=t=>esc(t).replace(/https?:\/\/[^\s<>"'「」『』（）()【】]+/g,u=>`<a class="rlink" href="${u}" target="_blank" rel="noopener noreferrer">${linkName(u.replace(/&amp;/g,'&'))}</a>`).replace(/\n/g,'<br>');
+  const rows=list===undefined?'<p class="muted cmt-load">読み込み中…</p>':list.map(c=>`<div class="cmt">${av(c.author,'sm')}<div class="cmt-b">
+      <div class="cmt-h"><b>${esc(pname(c.author))}</b><span>${ago(c.createdAt)}</span>${S.me.id&&(c.author===S.me.id||isBoard())?`<button type="button" class="cmt-del" data-cdel="${esc(c.id)}|${esc(r.id)}">削除</button>`:''}</div>
+      <p>${body(c.body||'')}</p></div></div>`).join('');
+  return `<div class="cmts">${rows}
+    ${S.canWrite?`<form class="cmt-f" data-cform="${esc(r.id)}"><textarea id="cmt-${esc(r.id)}" rows="1" maxlength="1000" placeholder="コメントを書く" aria-label="コメント">${esc(S.cmtDraft[r.id]||'')}</textarea><button class="btn primary" type="submit">送信</button></form>`:''}</div>`;
+}
+function toggleComments(id){
+  if(S.cmtOpen.has(id)){
+    S.cmtOpen.delete(id);if(S.cmtSubs[id]){try{S.cmtSubs[id]();}catch(e){}delete S.cmtSubs[id];}
+  }else{
+    S.cmtOpen.add(id);
+    if(!S.cmtSubs[id])S.cmtSubs[id]=db.collection('comments').where('reportId','==',id).onSnapshot(
+      sn=>{S.comments[id]=sn.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));schedule();},
+      e=>{console.warn(e);S.comments[id]=[];schedule();if(e&&e.code==='permission-denied')toast('コメントを読み込めませんでした（管理者がルールを更新すると使えます）');});
+  }
+  paint();
+  if(!matchMedia('(pointer:coarse)').matches)setTimeout(()=>{const t=document.getElementById('cmt-'+id);if(t&&S.cmtOpen.has(id))t.focus({preventScroll:true});},50);
+}
+async function postComment(id){
+  const ta=document.getElementById('cmt-'+id);if(!ta)return;
+  const text=ta.value.trim();if(!text)return;
+  ta.value='';S.cmtDraft[id]='';
+  try{
+    await db.collection('comments').add({reportId:id,author:S.me.id,body:text,createdAt:Date.now()});
+    db.collection('reports').doc(id).update({cmt:firebase.firestore.FieldValue.increment(1)}).catch(()=>{});
+  }catch(e){S.cmtDraft[id]=text;ta.value=text;fail(e);}
+}
+async function deleteComment(cid,rid){
+  try{
+    await db.collection('comments').doc(cid).delete();
+    db.collection('reports').doc(rid).update({cmt:firebase.firestore.FieldValue.increment(-1)}).catch(()=>{});
+    toast('コメントを削除しました');
+  }catch(e){fail(e);}
 }
 function eventRow(e){
   const who=e.assignee?`<span class="who-sm">${av(e.assignee,'sm')}${esc(pname(e.assignee))}</span>`:'';
@@ -1188,13 +1292,19 @@ function setView(v){
 document.addEventListener('click',async e=>{
   if(e.target.closest('a.tref,a.rlink,a.fmain'))return;
   if(e.target.closest('[data-logout]')){closeSheet();if(pushGet())await disablePush(true);if(auth)auth.signOut();return;}
-  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-tdept],[data-tgrp],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-mkr],[data-mkf],[data-react],[data-rmatt],#fab');
+  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-tdept],[data-tgrp],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-mkr],[data-mkf],[data-react],[data-cmt],[data-cdel],[data-acks],[data-rmatt],#fab');
   if(!g){if(e.target.id==='back')closeSheet();return;}
   const ds=g.dataset;
   if('rmatt' in ds)return;
   if(ds.fold){closeSheet();S.folderOpen=ds.fold;S.docsQ='';if(S.view!=='docs')setView('docs');else{paint();window.scrollTo(0,0);}return;}
   if('foldback' in ds){S.folderOpen=null;paint();return;}
   if(ds.foldedit){folderSheet(ds.foldedit);return;}
+  if(ds.cmt){toggleComments(ds.cmt);return;}
+  if(ds.acks){ackSheet(ds.acks);return;}
+  if(ds.cdel){
+    if(!g.classList.contains('armed')){g.classList.add('armed');g.textContent='もう一度押すと削除';setTimeout(()=>{if(g.isConnected){g.classList.remove('armed');g.textContent='削除';}},3000);return;}
+    const [cid,rid]=ds.cdel.split('|');deleteComment(cid,rid);return;
+  }
   if(ds.react){
     if(!S.me.id)return;
     const [rid,k]=ds.react.split('|'),r=S.reports.find(x=>x.id===rid);if(!r)return;
@@ -1260,10 +1370,16 @@ document.addEventListener('click',async e=>{
   if(ds.td){const x=S.todos.find(y=>y.id===ds.td);if(x)await upd('todos',x.id,{done:!x.done,doneAt:x.done?0:Date.now()});return;}
   if(ds.tdx){await del('todos',ds.tdx);return;}
 });
+document.addEventListener('submit',e=>{
+  const f=e.target.closest&&e.target.closest('form[data-cform]');
+  if(f){e.preventDefault();postComment(f.dataset.cform);}
+});
 document.addEventListener('input',e=>{
+  if(e.target.id&&e.target.id.startsWith('cmt-')){S.cmtDraft[e.target.id.slice(4)]=e.target.value;e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,160)+'px';return;}
   if(e.target.id==='docsQ'){S.docsQ=e.target.value;const b=$('#docsBody');if(b)b.innerHTML=docsBody();}
 });
 document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)&&e.target.id&&e.target.id.startsWith('cmt-')){e.preventDefault();postComment(e.target.id.slice(4));return;}
   if(e.key==='Escape'&&!$('#back').hidden){closeSheet();return;}
   if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-task],[data-ev]')){e.preventDefault();e.target.click();}
 });
