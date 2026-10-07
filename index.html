@@ -501,8 +501,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.11.0';
+const APP_VERSION='1.11.1';
 const CHANGELOG=[
+  {v:'1.11.1',date:'2026-10-07',items:['@eco.shimonoseki-cu.ac.jp のメールアドレスなら、どのアドレスでも参加できるようにしました']},
   {v:'1.11.0',date:'2026-10-05',items:['報告にコメントできるようになりました（報告者や同じ報告にコメントした人に通知が届きます）','報告者は「確認 ○/○人」を押すと、確認した人とまだの人を見られるようになりました']},
   {v:'1.10.0',date:'2026-10-05',items:['タスクを部門ごとに分けて表示するようにしました（見出しを押すと折りたためます）','上の部門ボタンで、1つの部門のタスクだけに絞り込めます']},
   {v:'1.9.0',date:'2026-09-29',items:['通知を強化：自分・自分の部署・@全員 がメンションされたら知らせます','朝と夜の好きな時刻に、新しい報告や未確認の連絡・タスクをまとめてお知らせ（右上のベルで設定）','「@全員」で全員にメンションできるようになりました','報告に「いいね」「ありがとう」などのリアクションを付けられるようになりました','通知が届かなかった不具合を修正']},
@@ -1437,7 +1438,7 @@ function gateLogin(mode,msg){
     <button type="button" class="gbtn" id="gGoogle">${GICON}Google でログイン</button>
     <div class="or">または メールアドレスで</div>
     <form id="gForm" style="display:grid;gap:12px" autocomplete="on">
-      <label class="fld">メールアドレス<input id="gEmail" type="email" required autocomplete="email" placeholder="s240000@eco.shimonoseki-cu.ac.jp"></label>
+      <label class="fld">メールアドレス<input id="gEmail" type="email" required autocomplete="email" placeholder="○○○@eco.shimonoseki-cu.ac.jp"></label>
       <label class="fld">パスワード${up?'（6文字以上）':''}<input id="gPass" type="password" required minlength="6" autocomplete="${up?'new-password':'current-password'}"></label>
       <p class="gate-msg" id="gMsg" ${msg?'':'hidden'}>${esc(msg||'')}</p>
       <button class="btn primary" type="submit">${up?'登録して確認メールを送る':'ログイン'}</button>
@@ -1447,7 +1448,7 @@ function gateLogin(mode,msg){
       ${up?'':'<button type="button" class="swap" id="gReset">パスワードを忘れた</button>'}
     </div>
   </div>
-  <p class="gate-note">大学のメールアドレス（s＋数字6桁@eco.shimonoseki-cu.ac.jp）ならすぐに参加できます。それ以外のアドレスは、管理者に登録してもらうと使えるようになります。</p>`);
+  <p class="gate-note">大学のメールアドレス（@eco.shimonoseki-cu.ac.jp）ならすぐに参加できます。それ以外のアドレスは、管理者に登録してもらうと使えるようになります。</p>`);
   const say=(t,ok)=>{const m=$('#gMsg');m.textContent=t;m.classList.toggle('ok',!!ok);m.hidden=!t;};
   $('#gSwap').onclick=()=>gateLogin(up?'login':'signup');
   $('#gGoogle').onclick=async()=>{
@@ -1489,7 +1490,7 @@ function gateDenied(u){
   showGate(`${gateHero('まだ参加できません')}
   <div class="card">
     <p style="margin:0"><b>${esc(u.email)}</b> はまだメンバーに登録されていません。</p>
-    <p class="gate-note">大学のメールアドレス（s＋数字6桁@eco.shimonoseki-cu.ac.jp）でログインし直すか、管理者にこのアドレスを登録してもらってください。</p>
+    <p class="gate-note">大学のメールアドレス（@eco.shimonoseki-cu.ac.jp）でログインし直すか、管理者にこのアドレスを登録してもらってください。</p>
     <button type="button" class="btn ghost" id="gOut">別のアカウントでログインする</button>
   </div>`);
   $('#gOut').onclick=()=>auth.signOut();
