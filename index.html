@@ -373,6 +373,34 @@ a.fmain{color:inherit;text-decoration:none}
 .tgrp-h .chev{width:18px;height:18px;color:var(--muted);margin-left:auto;transform:rotate(90deg);transition:transform .15s}
 .tgrp.shut .tgrp-h .chev{transform:none}
 .cmt-bar{margin-top:10px}
+/* 広場 */
+.lg-intro{margin:-4px 0 12px;color:var(--muted);font-size:13px}
+.lg-card.kudos{background:linear-gradient(135deg,var(--accent-soft),var(--surface) 70%);border:1.5px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+.lg-kind{display:inline-flex;align-items:center;gap:4px}
+.k-kudos{background:var(--accent);color:var(--hero-ink)}
+.k-chat{background:var(--sky-soft);color:var(--sky)}
+.k-daily{background:var(--leaf-soft);color:var(--leaf)}
+.kudo-to{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;font-weight:700;font-size:14px}
+.kudo-to .who-sm{background:var(--surface);border-radius:999px;padding:2px 10px 2px 2px;box-shadow:var(--shadow)}
+.kudo-to .to-lab{color:var(--accent-ink);font-size:13px}
+.lg-img{display:block;margin-top:10px;border-radius:12px;max-width:100%;max-height:420px;object-fit:cover;background:var(--surface2);border:0;padding:0;cursor:zoom-in}
+.lg-img.ph{width:100%;height:180px}
+.lg-foot{display:flex;justify-content:flex-end;margin-top:6px}
+.lg-kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lg-kinds button{border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 6px;display:grid;gap:2px;justify-items:center;font-weight:700;font-size:13.5px;color:var(--ink)}
+.lg-kinds button .e{font-size:22px;line-height:1.1}
+.lg-kinds button small{font-weight:600;font-size:11px;color:var(--muted)}
+.lg-kinds button.on{border-color:var(--accent);background:var(--accent-soft)}
+.to-pick{display:flex;flex-wrap:wrap;gap:6px;max-height:180px;overflow:auto;padding:2px}
+.to-pick button{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 12px 3px 3px;font-size:13px;font-weight:700;color:var(--ink)}
+.to-pick button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink)}
+.lg-prev{position:relative;display:inline-block;margin-top:6px}
+.lg-prev img{max-width:160px;max-height:160px;border-radius:10px;display:block}
+.lg-prev button{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:15px;line-height:1}
+.img-view{display:grid;place-items:center}
+.img-view img{max-width:100%;max-height:75vh;border-radius:12px}
+.kudo-strip{display:flex;align-items:center;gap:10px;background:var(--accent-soft);border-radius:var(--r);padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--accent-ink);font-weight:700}
+.kudo-strip .stack{margin-left:auto}
 .cmt-tg{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:2px 0;color:var(--muted);font-size:13px;font-weight:700}
 .cmt-tg svg{width:16px;height:16px}
 .cmt-tg.on{color:var(--accent-ink)}
@@ -404,9 +432,9 @@ a.fmain{color:inherit;text-decoration:none}
 
 /* nav & fab */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center}
-.tabs-in{display:grid;grid-template-columns:repeat(6,1fr);max-width:560px;width:100%}
+.tabs-in{display:grid;grid-template-columns:repeat(7,1fr);max-width:600px;width:100%}
 .tab{position:relative;display:grid;justify-items:center;gap:1px;background:none;border:0;color:var(--muted);font-size:10.5px;font-weight:700;padding:4px 0}
-.tab .ic{width:44px;height:30px;border-radius:15px;display:grid;place-items:center;transition:background .15s}
+.tab .ic{width:40px;height:30px;border-radius:15px;display:grid;place-items:center;transition:background .15s}
 .tab svg{width:22px;height:22px}
 .tab.on{color:var(--ink)}
 .tab.on .ic{background:var(--accent-soft);color:var(--accent-ink)}
@@ -458,6 +486,7 @@ a.fmain{color:inherit;text-decoration:none}
     <button class="tab" type="button" data-v="home"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg></span>ホーム</button>
     <button class="tab" type="button" data-v="tasks"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="4"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span>タスク<span class="badge" id="bTasks" hidden></span></button>
     <button class="tab" type="button" data-v="reports"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-5 4v-4.5"/><path d="M8.5 9h7M8.5 12h4.5"/></svg></span>報告<span class="badge" id="bReports" hidden></span></button>
+    <button class="tab" type="button" data-v="lounge"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.6 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z"/></svg></span>広場<span class="badge" id="bLounge" hidden></span></button>
     <button class="tab" type="button" data-v="calendar"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg></span>予定</button>
     <button class="tab" type="button" data-v="docs"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7A2 2 0 0 1 5.5 5h4l2 2.2h7A2 2 0 0 1 20.5 9.2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M3.5 10.5h17"/></svg></span>資料</button>
     <button class="tab" type="button" data-v="org"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="5" rx="1.5"/><rect x="3" y="16" width="6" height="5" rx="1.5"/><rect x="15" y="16" width="6" height="5" rx="1.5"/><path d="M12 8v4M6 16v-4h12v4"/></svg></span>組織</button>
@@ -501,8 +530,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.11.1';
+const APP_VERSION='1.12.0';
 const CHANGELOG=[
+  {v:'1.12.0',date:'2026-10-09',items:['下のメニューに「広場」を追加しました。仲間への賞賛・雑談・日常のひとこまを気軽に投稿できます','賞賛では相手を選んで送れます（相手に通知が届きます）。写真も1枚付けられます','ホームに「最近の賞賛」を表示するようにしました']},
   {v:'1.11.1',date:'2026-10-07',items:['参加は登録制になりました（管理者が登録したメールアドレスの人だけが使えます）']},
   {v:'1.11.0',date:'2026-10-05',items:['報告にコメントできるようになりました（報告者や同じ報告にコメントした人に通知が届きます）','報告者は「確認 ○/○人」を押すと、確認した人とまだの人を見られるようになりました']},
   {v:'1.10.0',date:'2026-10-05',items:['タスクを部門ごとに分けて表示するようにしました（見出しを押すと折りたためます）','上の部門ボタンで、1つの部門のタスクだけに絞り込めます']},
@@ -529,7 +559,7 @@ function updCard(){
     <div class="actions"><button type="button" class="btn ghost" data-about>更新履歴を見る</button><span class="sp"></span><button type="button" class="btn primary" data-seen>OK</button></div></section>`;
 }
 
-const S={cmtOpen:new Set(),comments:{},cmtSubs:{},cmtDraft:{},taskDept:'',taskShut:new Set(),view:'home',tasks:[],reports:[],events:[],todos:[],folders:[],files:[],folderOpen:null,docsQ:'',members:{},membersLoaded:false,orgOpen:new Set(),myFb:[],seenOk:false,me:{id:null,name:'',avatarUrl:'',color:'#5B716B'},
+const S={lounge:[],limg:{},lgFilter:'all',loungeDenied:false,cmtCol:{},cmtOpen:new Set(),comments:{},cmtSubs:{},cmtDraft:{},taskDept:'',taskShut:new Set(),view:'home',tasks:[],reports:[],events:[],todos:[],folders:[],files:[],folderOpen:null,docsQ:'',members:{},membersLoaded:false,orgOpen:new Set(),myFb:[],seenOk:false,me:{id:null,name:'',avatarUrl:'',color:'#5B716B'},
   canWrite:true,preview:false,loaded:false,taskFilter:'mine',repFilter:'all',calMonth:null,calSel:today(),P:{}};
 const FIREBASE_CONFIG={
   apiKey:"AIzaSyAp7rKbZ6-HquNd31RxhA5E74e7m6CgaeQ",
@@ -675,10 +705,12 @@ function paint(){
   const m=myMentions().length, over=myOpenTasks().filter(t=>t.due&&dayDiff(t.due)<=0).length;
   const bR=$('#bReports'),bT=$('#bTasks');
   bR.hidden=!m;bR.textContent=m;bT.hidden=!over;bT.textContent=over;
+  if(S.view==='lounge')lgMarkSeen();
+  const nl=lgUnseen(),bL=$('#bLounge');bL.hidden=!nl;bL.textContent=nl>9?'9+':nl;
   $('#banner').hidden=!S.preview;
   $('#hdot').hidden=!unseen();
   $('#meAv').innerHTML=S.me.id?av(S.me.id):'';
-  const fab=$('#fab'),F={home:'報告する',tasks:'タスク追加',reports:'報告する',calendar:'予定を追加',docs:S.docsDenied?'':S.folderOpen?'資料を追加':'フォルダを作成'};
+  const fab=$('#fab'),F={home:'報告する',tasks:'タスク追加',reports:'報告する',calendar:'予定を追加',docs:S.docsDenied?'':S.folderOpen?'資料を追加':'フォルダを作成',lounge:S.loungeDenied?'':'投稿する'};
   fab.hidden=!S.loaded||!S.canWrite||!F[S.view];
   if(F[S.view])fab.innerHTML=PLUS+`<span>${F[S.view]}</span>`;
   const v=$('#view');
@@ -809,15 +841,107 @@ async function postComment(id){
   const text=ta.value.trim();if(!text)return;
   ta.value='';S.cmtDraft[id]='';
   try{
-    await db.collection('comments').add({reportId:id,author:S.me.id,body:text,createdAt:Date.now()});
-    db.collection('reports').doc(id).update({cmt:firebase.firestore.FieldValue.increment(1)}).catch(()=>{});
+    const c={reportId:id,author:S.me.id,body:text,createdAt:Date.now()};if(S.cmtCol[id])c.col=S.cmtCol[id];
+    await db.collection('comments').add(c);
+    db.collection(S.cmtCol[id]||'reports').doc(id).update({cmt:firebase.firestore.FieldValue.increment(1)}).catch(()=>{});
   }catch(e){S.cmtDraft[id]=text;ta.value=text;fail(e);}
 }
 async function deleteComment(cid,rid){
   try{
     await db.collection('comments').doc(cid).delete();
-    db.collection('reports').doc(rid).update({cmt:firebase.firestore.FieldValue.increment(-1)}).catch(()=>{});
+    db.collection(S.cmtCol[rid]||'reports').doc(rid).update({cmt:firebase.firestore.FieldValue.increment(-1)}).catch(()=>{});
     toast('コメントを削除しました');
+  }catch(e){fail(e);}
+}
+
+/* ---------- 広場（賞賛・雑談・日常） ---------- */
+const LG_KIND={kudos:['🎉','賞賛','k-kudos'],chat:['💬','雑談','k-chat'],daily:['📷','日常','k-daily']};
+const LG_REACTS=[['clap','👏','すごい'],['heart','❤️','いいね'],['lol','😂','わらった'],['thanks','🙏','ありがとう']];
+function lgSeenAt(){try{return Number(localStorage.getItem('eb-lounge-seen')||0);}catch(e){return 0;}}
+function lgMarkSeen(){const n=Math.max(0,...S.lounge.map(p=>p.createdAt||0));if(n>lgSeenAt()){try{localStorage.setItem('eb-lounge-seen',String(n));}catch(e){}}}
+function lgUnseen(){if(!S.me.id)return 0;const t=lgSeenAt();return S.lounge.filter(p=>p.author!==S.me.id&&(p.createdAt||0)>t).length;}
+function lgImg(p){
+  if(!p.img)return '';
+  const src=S.limg[p.id];
+  if(src===undefined&&db){S.limg[p.id]=null;db.collection('loungeImg').doc(p.id).get().then(d=>{S.limg[p.id]=d.exists?d.data().data:'';schedule();}).catch(()=>{S.limg[p.id]='';schedule();});}
+  if(!src)return src===''?'':'<div class="lg-img ph" aria-hidden="true"></div>';
+  return `<button type="button" class="lg-img" data-limg="${esc(p.id)}" aria-label="写真を大きく見る"><img class="lg-img" style="margin:0" src="${esc(src)}" alt="投稿の写真" loading="lazy"></button>`;
+}
+function loungeCard(p){
+  const [e,l,c]=LG_KIND[p.kind]||LG_KIND.chat;
+  const own=S.me.id&&p.author===S.me.id,canDel=own||isBoard();
+  const to=(p.to||[]);
+  S.cmtCol[p.id]='lounge';
+  return `<article class="card lg-card ${p.kind==='kudos'?'kudos':''}">
+    <div class="r-head">${av(p.author)}<div class="r-who"><b>${esc(pname(p.author))}</b>
+      <div class="r-meta"><span class="pill lg-kind ${c}">${e} ${l}</span>${p.kind==='kudos'&&to.includes(S.me.id)?'<span class="pill to-me">あなたへ</span>':''}<span>${ago(p.createdAt)}</span></div></div></div>
+    ${p.kind==='kudos'&&to.length?`<div class="kudo-to">${to.map(u=>`<span class="who-sm">${av(u,'sm')}${esc(pname(u))}さん</span>`).join('')}<span class="to-lab">へ</span></div>`:''}
+    ${p.body?`<p class="r-body">${richBody(p.body)}</p>`:''}
+    ${lgImg(p)}
+    <div class="reacts">${LG_REACTS.map(([k,em,lb])=>{const who=Object.entries((p.reacts||{})[k]||{}).filter(([,v])=>v).map(([u])=>u);const on=who.includes(S.me.id);
+      return `<button type="button" class="rx ${on?'on':''}" data-lreact="${esc(p.id)}|${k}" aria-pressed="${on}" aria-label="${lb}${who.length?`（${who.length}人）`:''}" title="${esc(who.length?who.map(pname).join('、'):lb)}"><span class="e">${em}</span>${who.length?`<span>${who.length}</span>`:`<span class="rl">${lb}</span>`}</button>`;}).join('')}</div>
+    ${commentBar(p)}
+    ${canDel?`<div class="lg-foot"><button class="del" type="button" data-ldel="${esc(p.id)}">削除</button></div>`:''}
+  </article>`;
+}
+async function lgPhoto(file){
+  const bmp=await createImageBitmap(file);
+  for(const [edge,q] of [[1280,0.78],[1024,0.7],[800,0.62]]){
+    const sc=Math.min(1,edge/Math.max(bmp.width,bmp.height)),w=Math.max(1,Math.round(bmp.width*sc)),h=Math.max(1,Math.round(bmp.height*sc));
+    const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(bmp,0,0,w,h);
+    let url=c.toDataURL('image/webp',q);if(!url.startsWith('data:image/webp'))url=c.toDataURL('image/jpeg',q);
+    if(url.length<700000)return url;
+  }
+  throw new Error('too-big');
+}
+function loungeSheet(kind0){
+  let kind=kind0||'kudos',photo=null;const to=new Set();
+  const people=Object.keys(S.members).filter(u=>u!==S.me.id).sort(byName);
+  openSheet(`<form id="f"><h2>広場に投稿</h2>
+    <div class="lg-kinds" id="lgK">${Object.entries(LG_KIND).map(([k,[e,l]])=>`<button type="button" data-k="${k}" class="${k===kind?'on':''}"><span class="e">${e}</span>${l}<small>${{kudos:'仲間をたたえる',chat:'なんでも話そう',daily:'今日のひとこま'}[k]}</small></button>`).join('')}</div>
+    <div class="fld" id="lgToW"><span>だれを賞賛しますか？ <span class="hint">複数選べます。選んだ人に通知が届きます</span></span>
+      <div class="to-pick" id="lgTo">${people.map(u=>`<button type="button" data-u="${esc(u)}" aria-pressed="false">${av(u,'sm')}${esc(pname(u))}</button>`).join('')}</div></div>
+    <label class="fld" for="lgBody" id="lgBodyL">ひとこと</label>
+    <textarea id="lgBody" rows="4" maxlength="1000"></textarea>
+    <div class="fld">写真 <span class="hint">1枚まで。自動で軽くして保存されます</span>
+      <div id="lgPrev"></div><div><button type="button" class="btn ghost" id="lgPhotoBtn" style="padding:6px 14px;font-size:13.5px">写真を選ぶ</button></div></div>
+    <div class="actions"><span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button><button class="btn primary" type="submit" id="lgSend">投稿する</button></div></form>`);
+  const PH={kudos:'例：昨日の出荷対応、本当に助かりました！段取りが早くてさすがでした。',chat:'例：最近ハマっているコーヒーの淹れ方ある人いますか？',daily:'例：今日のお昼はここ。おすすめです！'};
+  const sync=()=>{$('#lgToW').hidden=kind!=='kudos';$('#lgBody').placeholder=PH[kind];$('#lgBodyL').textContent=kind==='kudos'?'賞賛のことば':'ひとこと';
+    $('#lgK').querySelectorAll('[data-k]').forEach(b=>b.classList.toggle('on',b.dataset.k===kind));};
+  sync();
+  $('#lgK').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;kind=b.dataset.k;sync();});
+  $('#lgTo').addEventListener('click',e=>{const b=e.target.closest('[data-u]');if(!b)return;const u=b.dataset.u;if(to.has(u))to.delete(u);else to.add(u);b.classList.toggle('on',to.has(u));b.setAttribute('aria-pressed',to.has(u));});
+  const showPrev=()=>{$('#lgPrev').innerHTML=photo?`<span class="lg-prev"><img src="${photo}" alt="選んだ写真"><button type="button" id="lgRm" aria-label="写真を外す">×</button></span>`:'';$('#lgPhotoBtn').textContent=photo?'写真を変える':'写真を選ぶ';};
+  $('#lgPrev').addEventListener('click',e=>{if(e.target.id==='lgRm'){photo=null;showPrev();}});
+  $('#lgPhotoBtn').addEventListener('click',()=>{const i=document.createElement('input');i.type='file';i.accept='image/*';
+    i.onchange=async()=>{const fl=i.files&&i.files[0];if(!fl)return;try{photo=await lgPhoto(fl);showPrev();}catch(err){toast('この写真は読み込めませんでした。別の写真をお試しください');}};i.click();});
+  $('#f').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const body=$('#lgBody').value.trim();
+    if(kind==='kudos'&&!to.size){toast('賞賛する人を選んでください');return;}
+    if(!body&&!photo){toast('ひとことか写真を入れてください');return;}
+    $('#lgSend').disabled=true;
+    const data={kind,author:S.me.id,body,createdAt:Date.now(),img:!!photo};
+    if(kind==='kudos')data.to=[...to];
+    try{
+      if(!db){add('lounge',data);closeSheet();return;}
+      const ref=db.collection('lounge').doc();
+      if(photo)await db.collection('loungeImg').doc(ref.id).set({data:photo,by:S.me.id,createdAt:data.createdAt});
+      await ref.set(data);
+      if(photo)S.limg[ref.id]=photo;
+      closeSheet();toast(kind==='kudos'?'賞賛を送りました🎉':'投稿しました');
+      if(S.view!=='lounge'){S.lgFilter='all';setView('lounge');}
+    }catch(err){$('#lgSend').disabled=false;fail(err);}
+  });
+  setTimeout(()=>{if(kind!=='kudos')$('#lgBody').focus();},60);
+}
+async function deleteLounge(id){
+  try{
+    const p=S.lounge.find(x=>x.id===id);
+    await db.collection('lounge').doc(id).delete();
+    if(p&&p.img)db.collection('loungeImg').doc(id).delete().catch(()=>{});
+    toast('投稿を削除しました');
   }catch(e){fail(e);}
 }
 function eventRow(e){
@@ -853,6 +977,7 @@ home(){
   const evT=S.events.filter(e=>e.date===t).sort(byTime);
   const latest=sortedReports().filter(r=>!ment.includes(r)).slice(0,3);
   const bdays=upcomingBdays(7);
+  const recentKudos=S.lounge.filter(p=>p.kind==='kudos'&&(p.createdAt||0)>Date.now()-3*864e5).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,2);
   return `${roNote()}${unseen()?updCard():''}${pushPromptHtml()}<section class="hero">
     <p class="hero-date">${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${W[d.getDay()]}）</p>
     <h1>${greet}${nm?`、<br>${esc(nm)}さん`:''}</h1>
@@ -864,6 +989,7 @@ home(){
     </div></section>
   ${loading()}
   ${ment.length?`<section class="sec"><div class="sec-h"><h2>あなた宛ての連絡</h2></div><div class="list">${ment.slice(0,5).map(reportCard).join('')}</div></section>`:''}
+  ${recentKudos.length?`<section class="sec"><div class="sec-h"><h2>最近の賞賛</h2><button class="link" type="button" data-go="lounge" data-lf="kudos">広場へ</button></div><div class="list">${recentKudos.map(loungeCard).join('')}</div></section>`:''}
   ${bdays.length?`<section class="sec"><div class="sec-h"><h2>もうすぐ誕生日</h2></div><div class="list">${bdays.map(bdayCard).join('')}</div></section>`:''}
   <section class="sec"><div class="sec-h"><h2>期限が近いタスク</h2><button class="link" type="button" data-go="tasks">すべて見る</button></div>
     <div class="list">${mine.length?mine.slice(0,4).map(taskCard).join(''):empty('担当タスクはありません','新しいタスクは「タスク」から追加できます')}</div></section>
@@ -945,6 +1071,24 @@ org(){
   <div class="org-tree">${DEPTS.slice(1).map(orgNode).join('')}</div>
   ${unassigned.length?`<section class="sec"><div class="sec-h"><h2>部署未登録</h2></div><div class="org-body">${memRows(unassigned)}</div></section>`:''}
   <p class="org-hint" style="margin-top:16px">部署名をタップするとメンバーが表示されます。報告で「@部署名」と書くと、その部署の全員にまとめてメンションできます。</p>`;
+},
+lounge(){
+  if(S.loungeDenied)return `<h1 class="pg">広場</h1>${empty('広場は準備中です','管理者がFirestoreのルールを更新すると使えるようになります')}`;
+  const f=S.lgFilter;
+  let list=S.lounge.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(f==='me')list=list.filter(p=>p.kind==='kudos'&&(p.to||[]).includes(S.me.id));
+  else if(f!=='all')list=list.filter(p=>p.kind===f);
+  const toMe=S.lounge.filter(p=>p.kind==='kudos'&&(p.to||[]).includes(S.me.id)).length;
+  const seg=[['all','すべて'],['kudos','🎉 賞賛'],['chat','💬 雑談'],['daily','📷 日常'],['me','自分への賞賛']]
+    .map(([k,l])=>`<button type="button" data-lf="${k}" class="${f===k?'on':''}">${l}${k==='me'&&toMe?`<span class="ct">${toMe}</span>`:''}</button>`).join('');
+  const mStart=new Date();mStart.setDate(1);mStart.setHours(0,0,0,0);
+  const monthK=S.lounge.filter(p=>p.kind==='kudos'&&(p.createdAt||0)>=mStart.getTime());
+  const praised=[...new Set(monthK.flatMap(p=>p.to||[]))];
+  const strip=monthK.length&&(f==='all'||f==='kudos')?`<div class="kudo-strip">🎉 今月の賞賛 ${monthK.length}件・${praised.length}人が賞賛されました${stack(praised)}</div>`:'';
+  const emptyMsg={all:['まだ投稿はありません','右下の「投稿する」から、賞賛や雑談、日常のひとこまを共有しましょう'],kudos:['まだ賞賛はありません','仲間の「ありがとう」「すごい」を伝えてみましょう'],chat:['まだ雑談はありません',''],daily:['まだ日常の共有はありません','写真付きで気軽に投稿できます'],me:['まだあなたへの賞賛はありません','']}[f]||['',''];
+  return `${roNote()}<h1 class="pg">広場</h1><p class="lg-intro">仕事の外の話も、仲間への「ありがとう」も。気軽に投稿できる場所です。</p>
+  <div class="seg">${seg}</div>${strip}${loading()}
+  <div class="list">${list.length?list.map(loungeCard).join(''):empty(emptyMsg[0],emptyMsg[1])}</div>`;
 },
 docs(){
   if(S.docsDenied)return `<h1 class="pg">資料</h1>${empty('資料フォルダは準備中です','管理者がFirestoreのルールを設定すると使えるようになります')}`;
@@ -1293,7 +1437,7 @@ function setView(v){
 document.addEventListener('click',async e=>{
   if(e.target.closest('a.tref,a.rlink,a.fmain'))return;
   if(e.target.closest('[data-logout]')){closeSheet();if(pushGet())await disablePush(true);if(auth)auth.signOut();return;}
-  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-tdept],[data-tgrp],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-mkr],[data-mkf],[data-react],[data-cmt],[data-cdel],[data-acks],[data-rmatt],#fab');
+  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-tdept],[data-tgrp],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-mkr],[data-mkf],[data-react],[data-cmt],[data-cdel],[data-acks],[data-rmatt],[data-lf],[data-lreact],[data-ldel],[data-limg],#fab');
   if(!g){if(e.target.id==='back')closeSheet();return;}
   const ds=g.dataset;
   if('rmatt' in ds)return;
@@ -1302,6 +1446,18 @@ document.addEventListener('click',async e=>{
   if(ds.foldedit){folderSheet(ds.foldedit);return;}
   if(ds.cmt){toggleComments(ds.cmt);return;}
   if(ds.acks){ackSheet(ds.acks);return;}
+  if(ds.limg){const src=S.limg[ds.limg];if(src)openSheet(`<div class="img-view"><img src="${esc(src)}" alt="投稿の写真"></div><div class="actions"><span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button></div>`);return;}
+  if(ds.lreact){
+    if(!S.me.id)return;
+    const [pid,k]=ds.lreact.split('|'),p=S.lounge.find(x=>x.id===pid);if(!p)return;
+    const on=!!(((p.reacts||{})[k]||{})[S.me.id]);
+    await upd('lounge',pid,{['reacts.'+k+'.'+S.me.id]:on?firebase.firestore.FieldValue.delete():Date.now()});
+    return;
+  }
+  if(ds.ldel){
+    if(!g.classList.contains('armed')){g.classList.add('armed');g.textContent='もう一度押すと削除';setTimeout(()=>{if(g.isConnected){g.classList.remove('armed');g.textContent='削除';}},3000);return;}
+    deleteLounge(ds.ldel);return;
+  }
   if(ds.cdel){
     if(!g.classList.contains('armed')){g.classList.add('armed');g.textContent='もう一度押すと削除';setTimeout(()=>{if(g.isConnected){g.classList.remove('armed');g.textContent='削除';}},3000);return;}
     const [cid,rid]=ds.cdel.split('|');deleteComment(cid,rid);return;
@@ -1344,10 +1500,11 @@ document.addEventListener('click',async e=>{
   if(ds.prof){profileSheet(ds.prof);return;}
   if('myprof' in ds){if(!S.me.id){toast('サインインするとプロフィールを登録できます');return;}if(memberOf(S.me.id))profileSheet(S.me.id);else if(S.canWrite)profileForm(false);return;}
   if('editprof' in ds){profileForm(false);return;}
-  if(g.id==='fab'){({home:reportSheet,reports:reportSheet,tasks:()=>taskSheet(),calendar:()=>eventSheet(null,S.calSel),docs:()=>{if(S.folderOpen)addToFolderSheet(S.folderOpen);else folderSheet();}})[S.view]?.();return;}
+  if(g.id==='fab'){({home:reportSheet,reports:reportSheet,tasks:()=>taskSheet(),calendar:()=>eventSheet(null,S.calSel),lounge:()=>loungeSheet(),docs:()=>{if(S.folderOpen)addToFolderSheet(S.folderOpen);else folderSheet();}})[S.view]?.();return;}
   if(ds.close!==undefined){closeSheet();return;}
   if(g.classList.contains('tab')){if(ds.v==='docs')S.folderOpen=null;setView(ds.v);return;}
-  if(ds.go){if(ds.rf)S.repFilter=ds.rf;setView(ds.go);return;}
+  if(ds.go){if(ds.rf)S.repFilter=ds.rf;if(ds.lf)S.lgFilter=ds.lf;setView(ds.go);return;}
+  if(ds.lf){S.lgFilter=ds.lf;paint();return;}
   if(ds.rf){S.repFilter=ds.rf;paint();return;}
   if(ds.tf){S.taskFilter=ds.tf;paint();return;}
   if(ds.tdept!==undefined&&g.classList.contains('tchip')){S.taskDept=ds.tdept;paint();return;}
@@ -1853,6 +2010,8 @@ function start(u){
       sub('events',db.collection('events'));
       subSoft('folders',db.collection('folders'));
       subSoft('files',db.collection('files').orderBy('createdAt','desc').limit(500));
+      unsubs.push(db.collection('lounge').orderBy('createdAt','desc').limit(150).onSnapshot(s=>{S.lounge=s.docs.map(d=>({id:d.id,...d.data()}));S.loungeDenied=false;schedule();},
+        e=>{console.warn('lounge',e);if(e&&e.code==='permission-denied'){S.loungeDenied=true;schedule();}}));
       unsubs.push(db.collection('feedback').where('uid','==',u.uid).onSnapshot(fs=>{S.myFb=fs.docs.map(d=>({id:d.id,...d.data()}));},()=>{}));
       S.loaded=true;
       checkPush().then(()=>{schedule();refreshPush();});

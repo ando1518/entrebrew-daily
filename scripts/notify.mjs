@@ -1,7 +1,8 @@
 // EntreBrew Daily の通知（GitHub Actions から5分ごとに実行）
 //  1. メンション通知：新しい報告・連絡で、自分・自分の部署・@全員 がメンションされたら、すぐ知らせる
 //  2. コメント通知：報告にコメントが付いたら、報告者と、同じ報告にコメントした人に知らせる
-//  3. 朝と夜のまとめ：各自が選んだ時刻に、新しい報告・未確認の連絡・タスクなどがあれば知らせる
+//  3. 広場の賞賛：賞賛された人に知らせる
+//  4. 朝と夜のまとめ：各自が選んだ時刻に、新しい報告・未確認の連絡・タスクなどがあれば知らせる
 import admin from 'firebase-admin';
 
 const APP_URL = process.env.APP_URL || 'https://ando1518.github.io/entrebrew-daily/';
@@ -33,7 +34,7 @@ const plain = (b, members) => (b || '')
   .replace(/\s+/g, ' ').trim();
 const clip = (s, n) => s.length > n ? s.slice(0, n - 1) + '…' : s;
 
-let stats = { mention: 0, comment: 0, digest: 0, removed: 0, failed: 0 };
+let stats = { mention: 0, comment: 0, kudos: 0, digest: 0, removed: 0, failed: 0 };
 const deadTokens = new Set();
 
 async function send(messages) {
@@ -116,7 +117,7 @@ async function main() {
       if (!c.reportId) continue;
       if (!(c.reportId in repCache)) {
         const [rs, others] = await Promise.all([
-          db.collection('reports').doc(c.reportId).get(),
+          db.collection(c.col === 'lounge' ? 'lounge' : 'reports').doc(c.reportId).get(),
           db.collection('comments').where('reportId', '==', c.reportId).get(),
         ]);
         repCache[c.reportId] = { r: rs.exists ? rs.data() : null, all: others.docs.map(x => x.data()) };
@@ -129,10 +130,11 @@ async function main() {
       const name = (members[c.author] || {}).name || 'メンバー';
       const body = clip(plain(c.body, members), 120);
       for (const u of who) {
-        const title = u === r.author ? `${name}さんがあなたの報告にコメント` : `${name}さんが報告にコメント`;
+        const what = c.col === 'lounge' ? '投稿' : '報告';
+        const title = u === r.author ? `${name}さんがあなたの${what}にコメント` : `${name}さんが${what}にコメント`;
         for (const t of byUid[u] || []) {
           if (t.mention === false) continue;
-          cMsgs.push(msg(t.id, title, body, '#reports', 'eb-c-' + c.reportId));
+          cMsgs.push(msg(t.id, title, body, c.col === 'lounge' ? '#lounge' : '#reports', 'eb-c-' + c.reportId));
         }
       }
     }
@@ -142,7 +144,33 @@ async function main() {
     console.log('コメント通知をスキップしました:', e.message || e);
   }
 
-  // ---------- 3. 朝と夜のまとめ ----------
+  // ---------- 3. 広場の賞賛 ----------
+  const kSince = state.lastLoungeAt || (nowMs - 10 * 60e3);
+  let kLast = kSince;
+  try {
+    const lSnap = await db.collection('lounge').where('createdAt', '>', kSince).orderBy('createdAt').limit(200).get();
+    const kMsgs = [];
+    for (const d of lSnap.docs) {
+      const p = d.data();
+      kLast = Math.max(kLast, p.createdAt || 0);
+      if (p.kind !== 'kudos') continue;
+      const name = (members[p.author] || {}).name || 'メンバー';
+      const body = clip(plain(p.body, members), 120) || '賞賛が届きました';
+      for (const u of new Set(p.to || [])) {
+        if (u === p.author) continue;
+        for (const t of byUid[u] || []) {
+          if (t.mention === false) continue;
+          kMsgs.push(msg(t.id, `${name}さんから賞賛が届きました🎉`, body, '#lounge', 'eb-k-' + d.id));
+        }
+      }
+    }
+    if (kMsgs.length) { await send(kMsgs); stats.kudos = kMsgs.length; }
+    if (!testEmail) await stateRef.set({ lastLoungeAt: kLast }, { merge: true });
+  } catch (e) {
+    console.log('賞賛の通知をスキップしました:', e.message || e);
+  }
+
+  // ---------- 4. 朝と夜のまとめ ----------
   const due = [];
   for (const t of tokens) {
     const mh = t.hour === null || t.hour === -1 ? null : Number(t.hour ?? DEFAULT_MORNING);
@@ -157,6 +185,8 @@ async function main() {
     const [taskSnap, evSnap] = await Promise.all([db.collection('tasks').get(), db.collection('events').where('date', '==', today).get()]);
     const tasks = taskSnap.docs.map(d => ({ ...d.data(), depts: normDepts(d.data().depts) }));
     const events = evSnap.docs.map(d => d.data()).sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
+    let lounge = [];
+    try { lounge = (await db.collection('lounge').where('createdAt', '>=', nowMs - 2 * 864e5).get()).docs.map(d => d.data()); } catch (e) {}
     const mmdd = today.slice(5);
     const bdays = Object.entries(members).filter(([, m]) => m.birthday === mmdd);
 
@@ -175,6 +205,11 @@ async function main() {
         lines.push(`新しい報告・連絡 ${fresh.length}件（${names.slice(0, 2).map(n => n + 'さん').join('・')}${names.length > 2 ? 'ほか' : ''}）`);
       }
       if (unread.length) lines.push(`未確認のあなた宛て ${unread.length}件`);
+      const lgNew = lounge.filter(p => p.author !== uid && (p.createdAt || 0) > from);
+      if (lgNew.length) {
+        const kd = lgNew.filter(p => p.kind === 'kudos').length;
+        lines.push(`広場の新しい投稿 ${lgNew.length}件${kd ? `（賞賛 ${kd}件）` : ''}`);
+      }
       if (slot === 'morning') {
         const td = mine.filter(x => x.due <= today), od = td.filter(x => x.due < today).length;
         if (td.length) lines.push(`今日までのタスク ${td.length}件${od ? `（期限切れ ${od}件）` : ''}`);
@@ -199,8 +234,8 @@ async function main() {
   }
 
   for (const tk of deadTokens) { await db.collection('pushTokens').doc(tk).delete().catch(() => {}); stats.removed++; }
-  console.log(`メンション通知 ${stats.mention} 件 / コメント通知 ${stats.comment} 件 / まとめ ${stats.digest} 件 / 無効な端末の削除 ${stats.removed} 件 / 失敗 ${stats.failed} 件`);
-  console.log(`::notice::通知オンの端末 ${tokens.length} 台 / メンション通知 ${stats.mention} 件 / コメント通知 ${stats.comment} 件 / まとめ ${stats.digest} 件 / 無効端末の削除 ${stats.removed} 件 / 失敗 ${stats.failed} 件`);
+  console.log(`メンション通知 ${stats.mention} 件 / コメント通知 ${stats.comment} 件 / 賞賛 ${stats.kudos} 件 / まとめ ${stats.digest} 件 / 無効な端末の削除 ${stats.removed} 件 / 失敗 ${stats.failed} 件`);
+  console.log(`::notice::通知オンの端末 ${tokens.length} 台 / メンション通知 ${stats.mention} 件 / コメント通知 ${stats.comment} 件 / 賞賛 ${stats.kudos} 件 / まとめ ${stats.digest} 件 / 無効端末の削除 ${stats.removed} 件 / 失敗 ${stats.failed} 件`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
