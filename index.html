@@ -255,6 +255,9 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .org-top .stack .av{border-color:var(--accent)}
 .org-top .chev{width:18px;height:18px;flex:none;transition:transform .15s}
 .org-top[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.org-top.audit{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);border-left:6px solid #4E6B8A}
+.org-top.audit b{font-size:16px}
+.org-top.audit .stack .av{border-color:var(--surface)}
 .org-top-wrap{display:grid;gap:6px;grid-template-columns:minmax(0,1fr)}
 .mem .chev{width:16px;height:16px;color:var(--muted);flex:none}
 .org-tree{position:relative;margin-left:26px;padding-left:18px;border-left:2px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding-top:12px}
@@ -520,9 +523,9 @@ const STATUS={todo:'未着手',doing:'進行中',done:'完了'};
 const NEXT={todo:'doing',doing:'done',done:'todo'};
 const CAT={'日報':'c-day','連絡':'c-note','共有':'c-share'};
 const REACTS=[['like','👍','いいね'],['thanks','🙏','ありがとう'],['ok','👌','了解'],['yay','🎉','すごい']];
-const DEPTS=['取締役会','経営管理総務部','経営管理経理部','国際事業部','営業部','マーケティング部','EC部','商品部','店舗運営部'];
-const BOARD='取締役会';
-const DC={'取締役会':'#E08A12','経営管理総務部':'#5B6CE0','経営管理経理部':'#7A4FD0','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
+const DEPTS=['取締役会','監査役','経営管理総務部','経営管理経理部','国際事業部','営業部','マーケティング部','EC部','商品部','店舗運営部'];
+const BOARD='取締役会',AUDIT='監査役';
+const DC={'取締役会':'#E08A12','監査役':'#4E6B8A','経営管理総務部':'#5B6CE0','経営管理経理部':'#7A4FD0','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
 const CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"/></svg>';
 // 旧い部署名で保存されたデータを新しい名前に読み替える
 const DEPT_ALIAS={'経営管理部総務部':'経営管理総務部','経営管理部経理部':'経営管理経理部'};
@@ -530,8 +533,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.12.0';
+const APP_VERSION='1.12.1';
 const CHANGELOG=[
+  {v:'1.12.1',date:'2026-10-10',items:['組織図に「監査役」を追加しました（プロフィールの所属で選べます）']},
   {v:'1.12.0',date:'2026-10-09',items:['下のメニューに「広場」を追加しました。仲間への賞賛・雑談・日常のひとこまを気軽に投稿できます','賞賛では相手を選んで送れます（相手に通知が届きます）。写真も1枚付けられます','ホームに「最近の賞賛」を表示するようにしました']},
   {v:'1.11.1',date:'2026-10-07',items:['参加は登録制になりました（管理者が登録したメールアドレスの人だけが使えます）']},
   {v:'1.11.0',date:'2026-10-05',items:['報告にコメントできるようになりました（報告者や同じ報告にコメントした人に通知が届きます）','報告者は「確認 ○/○人」を押すと、確認した人とまだの人を見られるようになりました']},
@@ -1060,15 +1064,18 @@ calendar(){
 org(){
   const me=S.me.id,mm=memberOf(me),board=deptMembers('取締役会');
   const unassigned=Object.keys(S.members).filter(id=>!(S.members[id].depts||[]).some(d=>DEPTS.includes(d))).sort(byName);
-  const openB=S.orgOpen.has('取締役会');
+  const openB=S.orgOpen.has('取締役会'),audit=deptMembers(AUDIT),openA=S.orgOpen.has(AUDIT);
   return `${roNote()}<h1 class="pg">組織図</h1>
   ${me?`<div class="card me-card">${av(me)}<div class="mt"><b>${esc(pname(me))}</b><div class="dps">${mm&&mm.depts&&mm.depts.length?mm.depts.map(dpill).join(''):'<span class="muted" style="font-size:13px">部署が未登録です</span>'}</div></div>
     <button type="button" class="btn ghost" data-myprof style="padding:8px 14px;font-size:13.5px">${mm?'プロフィール':'登録する'}</button></div>`:''}
   ${loading()}
   <div class="org-top-wrap"><button type="button" class="org-top" data-dept="取締役会" aria-expanded="${openB}">
     <div style="flex:1;min-width:0"><b>取締役会</b><div class="n">${board.length}人</div></div>${stack(board)}${CHEV}</button>
-    ${openB?`<div class="org-body">${memRows(board)}</div>`:''}</div>
-  <div class="org-tree">${DEPTS.slice(1).map(orgNode).join('')}</div>
+    ${openB?`<div class="org-body">${memRows(board)}</div>`:''}
+    <button type="button" class="org-top audit" data-dept="${AUDIT}" aria-expanded="${openA}">
+    <div style="flex:1;min-width:0"><b>監査役</b><div class="n">${audit.length?audit.length+'人':'未登録'}</div></div>${stack(audit)}${CHEV}</button>
+    ${openA?`<div class="org-body">${memRows(audit)}</div>`:''}</div>
+  <div class="org-tree">${DEPTS.filter(d=>d!==BOARD&&d!==AUDIT).map(orgNode).join('')}</div>
   ${unassigned.length?`<section class="sec"><div class="sec-h"><h2>部署未登録</h2></div><div class="org-body">${memRows(unassigned)}</div></section>`:''}
   <p class="org-hint" style="margin-top:16px">部署名をタップするとメンバーが表示されます。報告で「@部署名」と書くと、その部署の全員にまとめてメンションできます。</p>`;
 },
