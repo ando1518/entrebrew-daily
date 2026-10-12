@@ -533,8 +533,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.12.1';
+const APP_VERSION='1.12.2';
 const CHANGELOG=[
+  {v:'1.12.2',date:'2026-10-12',items:['ホームの「最近の賞賛」は、一度表示したら次からは出ないようにしました（広場ではいつでも見られます）']},
   {v:'1.12.1',date:'2026-10-10',items:['組織図に「監査役」を追加しました（プロフィールの所属で選べます）']},
   {v:'1.12.0',date:'2026-10-09',items:['下のメニューに「広場」を追加しました。仲間への賞賛・雑談・日常のひとこまを気軽に投稿できます','賞賛では相手を選んで送れます（相手に通知が届きます）。写真も1枚付けられます','ホームに「最近の賞賛」を表示するようにしました']},
   {v:'1.11.1',date:'2026-10-07',items:['参加は登録制になりました（管理者が登録したメールアドレスの人だけが使えます）']},
@@ -859,6 +860,16 @@ async function deleteComment(cid,rid){
 }
 
 /* ---------- 広場（賞賛・雑談・日常） ---------- */
+// ホームの「最近の賞賛」：一度表示した賞賛は、次にアプリを開いたときから出さない（この画面を開いている間は出したまま）
+const kShown=new Set();
+function kSeenGet(){try{return new Set(JSON.parse(localStorage.getItem('eb-kudos-seen')||'[]'));}catch(e){return new Set();}}
+function homeKudos(){
+  const seen=kSeenGet();
+  const list=S.lounge.filter(p=>p.kind==='kudos'&&(p.createdAt||0)>Date.now()-3*864e5&&(!seen.has(p.id)||kShown.has(p.id)))
+    .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,2);
+  if(list.some(p=>!seen.has(p.id))){list.forEach(p=>{kShown.add(p.id);seen.add(p.id);});try{localStorage.setItem('eb-kudos-seen',JSON.stringify([...seen].slice(-200)));}catch(e){}}
+  return list;
+}
 const LG_KIND={kudos:['🎉','賞賛','k-kudos'],chat:['💬','雑談','k-chat'],daily:['📷','日常','k-daily']};
 const LG_REACTS=[['clap','👏','すごい'],['heart','❤️','いいね'],['lol','😂','わらった'],['thanks','🙏','ありがとう']];
 function lgSeenAt(){try{return Number(localStorage.getItem('eb-lounge-seen')||0);}catch(e){return 0;}}
@@ -981,7 +992,7 @@ home(){
   const evT=S.events.filter(e=>e.date===t).sort(byTime);
   const latest=sortedReports().filter(r=>!ment.includes(r)).slice(0,3);
   const bdays=upcomingBdays(7);
-  const recentKudos=S.lounge.filter(p=>p.kind==='kudos'&&(p.createdAt||0)>Date.now()-3*864e5).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,2);
+  const recentKudos=homeKudos();
   return `${roNote()}${unseen()?updCard():''}${pushPromptHtml()}<section class="hero">
     <p class="hero-date">${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${W[d.getDay()]}）</p>
     <h1>${greet}${nm?`、<br>${esc(nm)}さん`:''}</h1>
