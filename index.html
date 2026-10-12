@@ -255,6 +255,19 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .org-top .stack .av{border-color:var(--accent)}
 .org-top .chev{width:18px;height:18px;flex:none;transition:transform .15s}
 .org-top[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.org-mgr{margin:-2px 0 4px 26px;padding:10px 0 0 18px;border-left:2px solid var(--accent);position:relative}
+.org-mgr::before{content:'';position:absolute;left:0;top:34px;width:16px;border-top:2px solid var(--accent)}
+.org-lab{margin:14px 0 -4px;font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.04em}
+.nm .kind{margin-left:6px;font-size:11px;font-weight:700;color:var(--muted)}
+.org-sub{margin:6px 0 0 14px;padding-left:12px;border-left:2px dashed color-mix(in srgb,var(--dc) 45%,transparent);display:grid;gap:6px}
+.org-sec{display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:12px;padding:9px 12px;box-shadow:var(--shadow);font-size:14px;flex-wrap:wrap}
+.org-sec .sdot{width:8px;height:8px;border-radius:3px;background:var(--dc)}
+.org-sec .rl{font-family:var(--font-d);font-weight:800;min-width:46px;color:var(--dc)}
+.org-sec .rj{font-size:11.5px;color:var(--muted);font-weight:700}
+.org-sec .who{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.org-sec .who .who-sm{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer}
+.org-sec .tbd{font-size:12px;color:var(--muted);font-weight:700;border:1.5px dashed var(--line);border-radius:999px;padding:1px 10px}
+.cxo-pill{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:#5B6CE0;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:1px}
 .org-top.audit{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);border-left:6px solid #4E6B8A}
 .org-top.audit b{font-size:16px}
 .org-top.audit .stack .av{border-color:var(--surface)}
@@ -523,9 +536,13 @@ const STATUS={todo:'未着手',doing:'進行中',done:'完了'};
 const NEXT={todo:'doing',doing:'done',done:'todo'};
 const CAT={'日報':'c-day','連絡':'c-note','共有':'c-share'};
 const REACTS=[['like','👍','いいね'],['thanks','🙏','ありがとう'],['ok','👌','了解'],['yay','🎉','すごい']];
-const DEPTS=['取締役会','監査役','経営管理総務部','経営管理経理部','国際事業部','営業部','マーケティング部','EC部','商品部','店舗運営部'];
-const BOARD='取締役会',AUDIT='監査役';
-const DC={'取締役会':'#E08A12','監査役':'#4E6B8A','経営管理総務部':'#5B6CE0','経営管理経理部':'#7A4FD0','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
+const DEPTS=['取締役会','監査役','経営部','KopiLink','居酒屋','広報','経理'];
+// 経営部（MANAGE）の役職。担当はメンバーの cxo（例：['CCO']）で決まる
+const CXO=[['CEO','最高経営責任者'],['COO','最高執行責任者'],['CMO','最高マーケティング責任者'],['CCO','最高コミュニティ責任者'],['CSCO','最高サプライチェーン責任者'],['CFO','最高財務責任者'],['CSO','戦略参謀']];
+// 各部門の課（決まったらここに追加する）
+const SECTIONS={'KopiLink':[],'居酒屋':[],'広報':[],'経理':[]};
+const BOARD='取締役会',AUDIT='監査役',MANAGE='経営部';
+const DC={'経営部':'#5B6CE0','KopiLink':'#9A5B2E','居酒屋':'#DC3F47','広報':'#C2459E','経理':'#7A4FD0','取締役会':'#E08A12','監査役':'#4E6B8A','経営管理総務部':'#5B6CE0','経営管理経理部':'#7A4FD0','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
 const CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"/></svg>';
 // 旧い部署名で保存されたデータを新しい名前に読み替える
 const DEPT_ALIAS={'経営管理部総務部':'経営管理総務部','経営管理部経理部':'経営管理経理部'};
@@ -533,8 +550,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.12.2';
+const APP_VERSION='1.13.0';
 const CHANGELOG=[
+  {v:'1.13.0',date:'2026-10-12',items:['組織図を新しい組織に変えました：取締役会の下に経営部（MANAGE：CEO・COO・CMO・CCO・CSCO・CFO・CSO）、事業・機能部門としてKopiLink・居酒屋・広報・経理','新しい組織へのメンバーの配置は、順次管理者が行います（それまでは「配置調整中」に表示されます）']},
   {v:'1.12.2',date:'2026-10-12',items:['ホームの「最近の賞賛」は、一度表示したら次からは出ないようにしました（広場ではいつでも見られます）']},
   {v:'1.12.1',date:'2026-10-10',items:['組織図に「監査役」を追加しました（プロフィールの所属で選べます）']},
   {v:'1.12.0',date:'2026-10-09',items:['下のメニューに「広場」を追加しました。仲間への賞賛・雑談・日常のひとこまを気軽に投稿できます','賞賛では相手を選んで送れます（相手に通知が届きます）。写真も1枚付けられます','ホームに「最近の賞賛」を表示するようにしました']},
@@ -973,11 +991,19 @@ function memRows(ids){
   return ids.map(id=>{const m=S.members[id]||{};const line=(m.passion||'').replace(/\s+/g,' ');
     return `<button type="button" class="mem" data-prof="${esc(id)}">${av(id)}<span class="mt"><b>${esc(pname(id))}</b><span>${line?esc(line):'思いはまだ書かれていません'}</span></span>${CHEV}</button>`;}).join('');
 }
+const cxoOf=id=>((S.members[id]||{}).cxo||[]).filter(r=>CXO.some(([k])=>k===r));
+const cxoHolders=r=>Object.keys(S.members).filter(id=>cxoOf(id).includes(r)).sort(byName);
 function orgNode(d){
-  const ids=deptMembers(d),open=S.orgOpen.has(d);
+  const ids=deptMembers(d),open=S.orgOpen.has(d),secs=SECTIONS[d]||[];
+  let inner='';
+  if(open&&d===MANAGE){
+    inner=`<div class="org-sub">${CXO.map(([r,j])=>{const h=cxoHolders(r);return `<div class="org-sec role"><b class="rl">${r}</b><span class="rj">${j}</span><span class="who">${h.length?h.map(u=>`<button type="button" class="who-sm" data-prof="${esc(u)}">${av(u,'sm')}${esc(pname(u))}</button>`).join(''):'<span class="tbd">未定</span>'}</span></div>`;}).join('')}</div>`;
+  }else if(open){
+    inner=`<div class="org-sub">${secs.length?secs.map(c=>`<div class="org-sec"><span class="sdot"></span><b>${esc(c)}</b></div>`).join(''):'<div class="org-hint" style="padding:4px 2px">課はこれから設定します</div>'}
+      <div class="org-body" style="margin-top:2px">${memRows(ids)}</div></div>`;
+  }
   return `<div class="org-node ${open?'open':''}" style="--dc:${DC[d]}"><button type="button" class="org-head" data-dept="${esc(d)}" aria-expanded="${open}">
-    <span class="sw"></span><span class="nm">${esc(d)}</span>${stack(ids)}<span class="n">${ids.length}人</span>${CHEV}</button>
-    ${open?`<div class="org-body">${memRows(ids)}</div>`:''}</div>`;
+    <span class="sw"></span><span class="nm">${esc(d)}<small class="kind">${d===MANAGE?'MANAGE':'部門'}</small></span>${stack(ids)}<span class="n">${ids.length}人</span>${CHEV}</button>${inner}</div>`;
 }
 function bdayCard(b){
   const when=b.diff===0?'今日':b.diff===1?'明日':`${b.diff}日後・${fmtMD(b.s)}`;
@@ -996,7 +1022,7 @@ home(){
   return `${roNote()}${unseen()?updCard():''}${pushPromptHtml()}<section class="hero">
     <p class="hero-date">${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${W[d.getDay()]}）</p>
     <h1>${greet}${nm?`、<br>${esc(nm)}さん`:''}</h1>
-    ${myDepts().length?`<div class="dps">${myDepts().map(dpill).join('')}</div>`:(S.me.id&&S.membersLoaded?'<div><button type="button" class="dp" data-myprof style="border:0;padding:4px 12px">所属部署を登録する</button></div>':'')}
+    ${myDepts().length?`<div class="dps">${myDepts().map(dpill).join('')}</div>`:''}
     <div class="stats">
       <button class="stat" type="button" data-go="tasks"><b>${mine.length}</b><span>自分のタスク</span></button>
       <button class="stat" type="button" data-go="reports" data-rf="me"><b>${ment.length}</b><span>未確認の連絡</span></button>
@@ -1083,12 +1109,13 @@ org(){
   <div class="org-top-wrap"><button type="button" class="org-top" data-dept="取締役会" aria-expanded="${openB}">
     <div style="flex:1;min-width:0"><b>取締役会</b><div class="n">${board.length}人</div></div>${stack(board)}${CHEV}</button>
     ${openB?`<div class="org-body">${memRows(board)}</div>`:''}
+    <div class="org-mgr">${orgNode(MANAGE)}</div>
     <button type="button" class="org-top audit" data-dept="${AUDIT}" aria-expanded="${openA}">
     <div style="flex:1;min-width:0"><b>監査役</b><div class="n">${audit.length?audit.length+'人':'未登録'}</div></div>${stack(audit)}${CHEV}</button>
     ${openA?`<div class="org-body">${memRows(audit)}</div>`:''}</div>
-  <div class="org-tree">${DEPTS.filter(d=>d!==BOARD&&d!==AUDIT).map(orgNode).join('')}</div>
-  ${unassigned.length?`<section class="sec"><div class="sec-h"><h2>部署未登録</h2></div><div class="org-body">${memRows(unassigned)}</div></section>`:''}
-  <p class="org-hint" style="margin-top:16px">部署名をタップするとメンバーが表示されます。報告で「@部署名」と書くと、その部署の全員にまとめてメンションできます。</p>`;
+  <p class="org-lab">事業・機能部門</p><div class="org-tree">${DEPTS.filter(d=>d!==BOARD&&d!==AUDIT&&d!==MANAGE).map(orgNode).join('')}</div>
+  ${unassigned.length?`<section class="sec"><div class="sec-h"><h2>配置調整中</h2></div><div class="org-body">${memRows(unassigned)}</div></section>`:''}
+  <p class="org-hint" style="margin-top:16px">部門名をタップすると役職やメンバーが表示されます。報告で「@部署名」と書くと、その部署の全員にまとめてメンションできます。</p>`;
 },
 lounge(){
   if(S.loungeDenied)return `<h1 class="pg">広場</h1>${empty('広場は準備中です','管理者がFirestoreのルールを更新すると使えるようになります')}`;
@@ -1209,7 +1236,7 @@ function reportSheet(){
   openSheet(`<form id="f"><h2>報告・連絡を投稿</h2>
     <div class="seg" id="rCat" style="margin:0">${Object.keys(CAT).map(c=>`<button type="button" data-c="${c}" class="${c===cat?'on':''}">${c}</button>`).join('')}</div>
     <div class="mwrap"><label class="fld" for="rBody">本文 <span class="hint">「@」に続けて名前・部署名・「全員」を入力するとメンションできます</span></label>
-      <textarea id="rBody" rows="6" maxlength="2000" required placeholder="例：本日の出荷は42件完了。@EC部 のみなさん、明日の棚卸しの件よろしくお願いします。"></textarea>
+      <textarea id="rBody" rows="6" maxlength="2000" required placeholder="例：本日の出荷は42件完了。@KopiLink のみなさん、明日の棚卸しの件よろしくお願いします。"></textarea>
       <div class="sugg" id="mS" hidden></div>
       <div><button type="button" class="seg-like btn ghost" id="atBtn" style="padding:6px 14px;font-size:13.5px">@ メンションを追加</button></div>
     </div>
@@ -1317,7 +1344,7 @@ function eventSheet(id,date){
   const d=ev||{title:'',date:date||S.calSel,time:'',memo:'',assignee:null,depts:[],color:EV_COLORS[0]};
   let col=d.color||EV_COLORS[0];
   openSheet(`<form id="f"><h2>${ev?'予定を編集':'予定を追加'}</h2>
-    <label class="fld">タイトル<input id="eT" maxlength="80" required value="${esc(d.title)}" placeholder="例：商品部ミーティング"></label>
+    <label class="fld">タイトル<input id="eT" maxlength="80" required value="${esc(d.title)}" placeholder="例：経営部ミーティング"></label>
     <div class="row2"><label class="fld">日付<input id="eD" type="date" required value="${esc(d.date)}"></label>
     <label class="fld">開始時刻<input id="eH" type="time" value="${esc(d.time||'')}"></label></div>
     <label class="fld">メモ<input id="eM" maxlength="200" value="${esc(d.memo||'')}" placeholder="場所や持ち物など"></label>
@@ -1346,8 +1373,8 @@ function eventSheet(id,date){
 function profileSheet(id){
   const m=memberOf(id)||{};
   openSheet(`<div class="prof">
-    <div class="prof-top">${av(id)}<div style="flex:1;min-width:0"><b>${esc(pname(id))}</b>
-      <div class="dps">${(m.depts||[]).map(dpill).join('')||'<span class="muted" style="font-size:13px">部署未登録</span>'}</div></div></div>
+    <div class="prof-top">${av(id)}<div style="flex:1;min-width:0"><b>${esc(pname(id))}</b>${cxoOf(id).map(r=>`<span class="cxo-pill">${r}</span>`).join('')}
+      <div class="dps">${(m.depts||[]).map(dpill).join('')||'<span class="muted" style="font-size:13px">配置調整中</span>'}</div></div></div>
     <div class="prof-row"><span class="k">誕生日</span><span>${m.birthday?fmtBd(m.birthday):'<span class="muted">未登録</span>'}</span></div>
     <div class="prof-row"><span class="k">事業にかける思い</span><p class="passion ${m.passion?'':'none'}">${m.passion?esc(m.passion).replace(/\n/g,'<br>'):'まだ書かれていません'}</p></div>
     <div class="actions" style="width:100%"><span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button>
@@ -1358,9 +1385,9 @@ function profileForm(first){
   const [bm,bd]=(m.birthday||'').split('-').map(Number);
   const opts=(n,cur,u)=>Array.from({length:n},(_,i)=>`<option value="${i+1}" ${cur===i+1?'selected':''}>${i+1}${u}</option>`).join('');
   openSheet(`<form id="f"><h2>${first?'ようこそ、EntreBrew Dailyへ':'プロフィールを編集'}</h2>
-    ${first?'<p class="intro">最初に名前と所属部署を登録してください。部署ごとのまとめてメンションや組織図に使われます。あとからいつでも変更できます。</p>':''}
+    ${first?'<p class="intro">最初に名前を登録してください。所属部署は管理者が配置します。あとからいつでも変更できます。</p>':''}
     <label class="fld">表示名<input id="pN" maxlength="30" required value="${esc(m.name||S.me.name||'')}" placeholder="例：安藤 一慶"></label>
-    <div class="fld">所属部署（複数選択できます）<div class="dept-pick" id="dp">${DEPTS.map(d=>`<button type="button" data-d="${esc(d)}" class="${sel.has(d)?'on':''}" style="--dc:${DC[d]}" aria-pressed="${sel.has(d)}">${esc(d)}<svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>`).join('')}</div></div>
+    <div class="fld">所属部署（複数選択できます）<span class="hint">新しい組織への配置は管理者が行います。分からなければ空欄のままで大丈夫です</span><div class="dept-pick" id="dp">${DEPTS.map(d=>`<button type="button" data-d="${esc(d)}" class="${sel.has(d)?'on':''}" style="--dc:${DC[d]}" aria-pressed="${sel.has(d)}">${esc(d)}<svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>`).join('')}</div></div>
     <div class="fld">誕生日<div class="bdsel"><select id="bM" aria-label="誕生月"><option value="">月</option>${opts(12,bm,'月')}</select><select id="bD" aria-label="誕生日"><option value="">日</option>${opts(31,bd,'日')}</select></div></div>
     <label class="fld">事業にかける思い<textarea id="pP" maxlength="400" placeholder="例：一杯のコーヒーで、お客さまの毎日に小さな楽しみを届けたい">${esc(m.passion||'')}</textarea></label>
     <p class="hint" id="pErr" hidden style="color:var(--cherry);font-weight:700;margin:0"></p>
@@ -1373,7 +1400,6 @@ function profileForm(first){
     const err=$('#pErr'),M=Number($('#bM').value),D=Number($('#bD').value);
     const name=$('#pN').value.trim();
     if(!name){err.textContent='表示名を入力してください';err.hidden=false;return;}
-    if(!sel.size){err.textContent='所属部署を1つ以上選んでください';err.hidden=false;return;}
     if((M&&!D)||(!M&&D)){err.textContent='誕生日は月と日の両方を選んでください';err.hidden=false;return;}
     if(M&&D&&new Date(2000,M-1,D).getMonth()!==M-1){err.textContent='その日付は存在しません';err.hidden=false;return;}
     const data={name,avatarUrl:S.me.avatarUrl||'',color:S.me.color,depts:DEPTS.filter(d=>sel.has(d)),birthday:M&&D?`${pad(M)}-${pad(D)}`:'',passion:$('#pP').value.trim(),updatedAt:Date.now()};
@@ -1566,11 +1592,11 @@ function sample(){
   S.P={me:{name:'安藤',color:'#E08A12'},u2:{name:'田中',color:'#15A36A'},u3:{name:'佐藤',color:'#2872D9'},u4:{name:'山本',color:'#9B5DE5'},u5:{name:'鈴木',color:'#1C9BB8'}};
   const t=today(),now=Date.now();
   S.members={
-    me:{depts:['取締役会','経営管理総務部'],birthday:'03-14',passion:'一杯のコーヒーから、地域とお客さまの毎日を少しずつ明るくしていきたい。'},
-    u2:{depts:['EC部','マーケティング部'],birthday:t.slice(5),passion:'オンラインでも、お店で飲むときと同じワクワクを届けたいです。'},
-    u3:{depts:['店舗運営部','営業部'],birthday:plusDays(5).slice(5),passion:'常連さんが「ここに来ると落ち着く」と言ってくれる店をつくる。'},
-    u4:{depts:['商品部'],birthday:'11-02',passion:''},
-    u5:{depts:['国際事業部','取締役会'],birthday:'07-21',passion:'産地との関係を大切にしながら、海外にもEntreBrewの味を広げたい。'}};
+    me:{depts:['取締役会','経営部'],cxo:['CEO'],birthday:'03-14',passion:'一杯のコーヒーから、地域とお客さまの毎日を少しずつ明るくしていきたい。'},
+    u2:{depts:['KopiLink'],birthday:t.slice(5),passion:'オンラインでも、お店で飲むときと同じワクワクを届けたいです。'},
+    u3:{depts:['居酒屋'],birthday:plusDays(5).slice(5),passion:'常連さんが「ここに来ると落ち着く」と言ってくれる店をつくる。'},
+    u4:{depts:['広報'],birthday:'11-02',passion:''},
+    u5:{depts:['経営部','取締役会'],cxo:['COO'],birthday:'07-21',passion:'産地との関係を大切にしながら、海外にもEntreBrewの味を広げたい。'}};
   S.membersLoaded=true;
   S.tasks=[
     {id:'t1',title:'秋の新豆ブレンドの試飲会を準備する',assignee:'me',due:plusDays(1),status:'doing',updatedAt:now},
@@ -1583,7 +1609,7 @@ function sample(){
     {id:'r1',author:'u2',cat:'連絡',body:'@{me} 新豆のサンプルが届きました。試飲会の日程を決めたいので、都合のよい日を教えてください。',mentions:['me'],acks:{},createdAt:now-38*60e3},
     {id:'r2',author:'u3',cat:'日報',body:'本日の出荷42件完了。明日は午前中に棚卸しを行います。\n@{u4} さん、ラベルの在庫が少なくなっています。',mentions:['u4'],acks:{u2:1,u4:1},createdAt:now-3*3600e3},
     {id:'r3',author:'u4',cat:'共有',body:'商品部で焙煎プロファイルの資料をまとめました。共有フォルダの「焙煎」にあります。',mentions:[],acks:{me:1},createdAt:now-26*3600e3}];
-  S.events=[{id:'e1',title:'商品部ミーティング',date:t,time:'10:00',memo:'会議室A'},{id:'e2',title:'EC部 週次レビュー',date:t,time:'16:30',memo:''},{id:'e3',title:'新豆の試飲会',date:plusDays(3),time:'15:00',memo:'焙煎室'}];
+  S.events=[{id:'e1',title:'経営部ミーティング',date:t,time:'10:00',memo:'会議室A'},{id:'e2',title:'KopiLink 週次レビュー',date:t,time:'16:30',memo:''},{id:'e3',title:'新豆の試飲会',date:plusDays(3),time:'15:00',memo:'焙煎室'}];
   S.todos=[{id:'d1',text:'取締役会の資料に目を通す',due:t,done:false},{id:'d2',text:'名刺の追加を発注',due:plusDays(2),done:false},{id:'d3',text:'経費精算を提出',due:plusDays(-3),done:true,doneAt:now}];
 }
 
