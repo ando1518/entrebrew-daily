@@ -550,8 +550,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.13.0';
+const APP_VERSION='1.13.1';
 const CHANGELOG=[
+  {v:'1.13.1',date:'2026-10-13',items:['管理者があらかじめ所属を決めている人は、最初のプロフィール登録で所属が選ばれた状態になります']},
   {v:'1.13.0',date:'2026-10-12',items:['組織図を新しい組織に変えました：取締役会の下に経営部（MANAGE：CEO・COO・CMO・CCO・CSCO・CFO・CSO）、事業・機能部門としてKopiLink・居酒屋・広報・経理','新しい組織へのメンバーの配置は、順次管理者が行います（それまでは「配置調整中」に表示されます）']},
   {v:'1.12.2',date:'2026-10-12',items:['ホームの「最近の賞賛」は、一度表示したら次からは出ないようにしました（広場ではいつでも見られます）']},
   {v:'1.12.1',date:'2026-10-10',items:['組織図に「監査役」を追加しました（プロフィールの所属で選べます）']},
@@ -1380,8 +1381,8 @@ function profileSheet(id){
     <div class="actions" style="width:100%"><span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button>
       ${id===S.me.id&&S.canWrite?'<button type="button" class="btn primary" data-editprof>編集する</button>':''}</div></div>`);
 }
-function profileForm(first){
-  const m=memberOf(S.me.id)||{},sel=new Set(m.depts||[]);
+function profileForm(first,preset){
+  const m=memberOf(S.me.id)||{...(preset||{})},sel=new Set(m.depts||[]);
   const [bm,bd]=(m.birthday||'').split('-').map(Number);
   const opts=(n,cur,u)=>Array.from({length:n},(_,i)=>`<option value="${i+1}" ${cur===i+1?'selected':''}>${i+1}${u}</option>`).join('');
   openSheet(`<form id="f"><h2>${first?'ようこそ、EntreBrew Dailyへ':'プロフィールを編集'}</h2>
@@ -1410,7 +1411,11 @@ function profileForm(first){
 let onboarded=false;
 function maybeOnboard(){
   if(onboarded||S.preview||!S.me.id||!S.canWrite||!S.membersLoaded||S.members[S.me.id]||!$('#back').hidden)return;
-  onboarded=true;profileForm(true);
+  onboarded=true;
+  // 管理者が登録時に所属などを決めている場合（allow の preset）は、最初から選んだ状態で開く
+  const em=((auth&&auth.currentUser&&auth.currentUser.email)||'').toLowerCase();
+  (em?db.collection('allow').doc(em).get().then(d=>(d.exists&&d.data().preset)||null).catch(()=>null):Promise.resolve(null))
+    .then(p=>{if(!S.members[S.me.id])profileForm(true,p&&{depts:(p.depts||[]).filter(x=>DEPTS.includes(x)),name:p.name||''});});
 }
 
 function aboutSheet(){
