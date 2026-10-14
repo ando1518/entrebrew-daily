@@ -267,6 +267,17 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .org-sec .who{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .org-sec .who .who-sm{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer}
 .org-sec .tbd{font-size:12px;color:var(--muted);font-weight:700;border:1.5px dashed var(--line);border-radius:999px;padding:1px 10px}
+.tent{display:inline-block;margin-left:5px;font-size:10.5px;font-weight:800;color:var(--accent-ink);background:var(--accent-soft);border:1px dashed var(--accent);border-radius:6px;padding:0 5px;line-height:1.5;vertical-align:1px}
+.mb{display:inline-block;margin-left:5px;font-size:10.5px;font-weight:800;color:var(--muted);background:var(--surface2);border-radius:6px;padding:0 6px;line-height:1.6;vertical-align:1px}
+.mb.head{color:#fff;background:var(--dc,#5B6CE0)}
+.mb.sec{color:var(--dc,var(--muted));background:color-mix(in srgb,var(--dc,#888) 12%,transparent)}
+.mem .mt b .mb,.mem .mt b .tent{display:inline-block;font-size:10.5px;white-space:nowrap;overflow:visible}
+.mem .mt b .mb{color:var(--muted)}
+.mem .mt b .mb.head{color:#fff}
+.mem .mt b .mb.sec{color:var(--dc,var(--muted))}
+.mem .mt b .tent{color:var(--accent-ink)}
+.tent-note{margin:12px 0 0;font-size:12.5px;color:var(--muted);font-weight:700}
+.org-sec.adv{border:1.5px dashed var(--line);box-shadow:none}
 .cxo-pill{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:#5B6CE0;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:1px}
 .org-top.audit{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);border-left:6px solid #4E6B8A}
 .org-top.audit b{font-size:16px}
@@ -540,22 +551,24 @@ const STATUS={todo:'未着手',doing:'進行中',done:'完了'};
 const NEXT={todo:'doing',doing:'done',done:'todo'};
 const CAT={'日報':'c-day','連絡':'c-note','共有':'c-share'};
 const REACTS=[['like','👍','いいね'],['thanks','🙏','ありがとう'],['ok','👌','了解'],['yay','🎉','すごい']];
-const DEPTS=['取締役会','監査役','経営部','KopiLink','居酒屋','広報','経理'];
+const DEPTS=['取締役会','監査役','経営部','KopiLink部','地方創成居酒屋経営部','広報部門','管理部門'];
 // 経営部（MANAGE）の役職。担当はメンバーの cxo（例：['CCO']）で決まる
-const CXO=[['CEO','最高経営責任者'],['COO','最高執行責任者'],['CMO','最高マーケティング責任者'],['CCO','最高コミュニティ責任者'],['CSCO','最高サプライチェーン責任者'],['CFO','最高財務責任者'],['CSO','戦略参謀']];
+const CXO=[['CEO','最高経営責任者'],['COO','最高執行責任者'],['CFO','最高財務責任者'],['CMO','最高マーケティング責任者・広報部門'],['CCO','最高コミュニティ責任者・地方創成居酒屋'],['CSCO','最高サプライチェーン責任者・KopiLink'],['CAO','最高管理責任者・管理部門'],['ADV','相談役']];
+const ROLE_LABEL={ADV:'CEOアドバイザー'};
 // 各部門の課（決まったらここに追加する）
-const SECTIONS={'KopiLink':[],'居酒屋':[],'広報':[],'経理':[]};
+const SECTIONS={'KopiLink部':['国際事業課','商品開発課','営業課'],'地方創成居酒屋経営部':['経理課','衛生管理課','コンセプト構想課'],'広報部門':['EC課','マーケティング課','コンテンツ構想課'],'管理部門':[]};
 const BOARD='取締役会',AUDIT='監査役',MANAGE='経営部';
-const DC={'経営部':'#5B6CE0','KopiLink':'#9A5B2E','居酒屋':'#DC3F47','広報':'#C2459E','経理':'#7A4FD0','取締役会':'#E08A12','監査役':'#4E6B8A','経営管理総務部':'#5B6CE0','経営管理経理部':'#7A4FD0','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
+const DC={'経営部':'#5B6CE0','KopiLink部':'#9A5B2E','地方創成居酒屋経営部':'#DC3F47','広報部門':'#C2459E','管理部門':'#7A4FD0','取締役会':'#E08A12','監査役':'#4E6B8A','経営管理総務部':'#5B6CE0','経営管理経理部':'#7A4FD0','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
 const CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"/></svg>';
 // 旧い部署名で保存されたデータを新しい名前に読み替える
-const DEPT_ALIAS={'経営管理部総務部':'経営管理総務部','経営管理部経理部':'経営管理経理部'};
+const DEPT_ALIAS={'経営管理部総務部':'経営管理総務部','経営管理部経理部':'経営管理経理部','KopiLink':'KopiLink部','居酒屋':'地方創成居酒屋経営部','広報':'広報部門','経理':'管理部門'};
 const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.14.0';
+const APP_VERSION='1.15.0';
 const CHANGELOG=[
+  {v:'1.15.0',date:'2026-10-14',items:['組織図の部門を KopiLink部・地方創成居酒屋経営部・広報部門・管理部門 にし、各部門の課を入れました','メンバーを仮配置しました。「仮」と付いている人は仮の配置で、面談のあとで確定します','経営部（MANAGE）の役職に CAO（最高管理責任者）と CEOアドバイザーを追加しました']},
   {v:'1.14.0',date:'2026-10-14',items:['組織図のいちばん上に全体図を追加しました：COO兼CFOが統括するKopiLinkと居酒屋の2つのプロジェクトと、それを横断する広報部門・管理部門（タップで拡大）']},
   {v:'1.13.1',date:'2026-10-13',items:['管理者があらかじめ所属を決めている人は、最初のプロフィール登録で所属が選ばれた状態になります']},
   {v:'1.13.0',date:'2026-10-12',items:['組織図を新しい組織に変えました：取締役会の下に経営部（MANAGE：CEO・COO・CMO・CCO・CSCO・CFO・CSO）、事業・機能部門としてKopiLink・居酒屋・広報・経理','新しい組織へのメンバーの配置は、順次管理者が行います（それまでは「配置調整中」に表示されます）']},
@@ -992,24 +1005,37 @@ function eventRow(e){
 
 /* views */
 function stack(ids){return ids.length?`<span class="stack">${ids.slice(0,5).map(i=>av(i,'sm')).join('')}</span>`:'';}
-function memRows(ids){
+const isTent=id=>!!(S.members[id]||{}).tentative;
+const TENT='<span class="tent" title="仮の配置です">仮</span>';
+function memBadges(id,d){
+  const m=S.members[id]||{},b=[];
+  if(d&&(m.heads||[]).includes(d))b.push('<span class="mb head">統括</span>');
+  if(m.title)b.push(`<span class="mb">${esc(m.title)}</span>`);
+  if(d)(m.secs||[]).filter(x=>x.startsWith(d+'/')).forEach(x=>b.push(`<span class="mb sec">${esc(x.split('/')[1])}</span>`));
+  if(isTent(id))b.push(TENT);
+  return b.join('');
+}
+function memRows(ids,d){
   if(!ids.length)return '<div class="org-hint">まだ登録されたメンバーがいません</div>';
   return ids.map(id=>{const m=S.members[id]||{};const line=(m.passion||'').replace(/\s+/g,' ');
-    return `<button type="button" class="mem" data-prof="${esc(id)}">${av(id)}<span class="mt"><b>${esc(pname(id))}</b><span>${line?esc(line):'思いはまだ書かれていません'}</span></span>${CHEV}</button>`;}).join('');
+    return `<button type="button" class="mem" data-prof="${esc(id)}">${av(id)}<span class="mt"><b>${esc(pname(id))}${memBadges(id,d)}</b><span>${line?esc(line):'思いはまだ書かれていません'}</span></span>${CHEV}</button>`;}).join('');
 }
+const chip=u=>`<button type="button" class="who-sm" data-prof="${esc(u)}">${av(u,'sm')}${esc(pname(u))}${isTent(u)?TENT:''}</button>`;
 const cxoOf=id=>((S.members[id]||{}).cxo||[]).filter(r=>CXO.some(([k])=>k===r));
 const cxoHolders=r=>Object.keys(S.members).filter(id=>cxoOf(id).includes(r)).sort(byName);
 function orgNode(d){
   const ids=deptMembers(d),open=S.orgOpen.has(d),secs=SECTIONS[d]||[];
   let inner='';
   if(open&&d===MANAGE){
-    inner=`<div class="org-sub">${CXO.map(([r,j])=>{const h=cxoHolders(r);return `<div class="org-sec role"><b class="rl">${r}</b><span class="rj">${j}</span><span class="who">${h.length?h.map(u=>`<button type="button" class="who-sm" data-prof="${esc(u)}">${av(u,'sm')}${esc(pname(u))}</button>`).join(''):'<span class="tbd">未定</span>'}</span></div>`;}).join('')}</div>`;
+    inner=`<div class="org-sub">${CXO.map(([r,j])=>{const h=cxoHolders(r);return `<div class="org-sec role ${r==='ADV'?'adv':''}"><b class="rl">${ROLE_LABEL[r]||r}</b><span class="rj">${j}</span><span class="who">${h.length?h.map(chip).join(''):'<span class="tbd">未定</span>'}</span></div>`;}).join('')}</div>`;
   }else if(open){
-    inner=`<div class="org-sub">${secs.length?secs.map(c=>`<div class="org-sec"><span class="sdot"></span><b>${esc(c)}</b></div>`).join(''):'<div class="org-hint" style="padding:4px 2px">課はこれから設定します</div>'}
-      <div class="org-body" style="margin-top:2px">${memRows(ids)}</div></div>`;
+    const inSec=c=>ids.filter(u=>((S.members[u]||{}).secs||[]).includes(d+'/'+c));
+    inner=`<div class="org-sub">${secs.map(c=>{const h=inSec(c);return `<div class="org-sec"><span class="sdot"></span><b>${esc(c)}</b><span class="who">${h.length?h.map(chip).join(''):'<span class="tbd">未定</span>'}</span></div>`;}).join('')||'<div class="org-hint" style="padding:4px 2px">課はこれから設定します</div>'}
+      <div class="org-body" style="margin-top:2px">${memRows(ids,d)}</div></div>`;
   }
+  const head=ids.filter(u=>((S.members[u]||{}).heads||[]).includes(d));
   return `<div class="org-node ${open?'open':''}" style="--dc:${DC[d]}"><button type="button" class="org-head" data-dept="${esc(d)}" aria-expanded="${open}">
-    <span class="sw"></span><span class="nm">${esc(d)}<small class="kind">${d===MANAGE?'MANAGE':'部門'}</small></span>${stack(ids)}<span class="n">${ids.length}人</span>${CHEV}</button>${inner}</div>`;
+    <span class="sw"></span><span class="nm">${esc(d)}<small class="kind">${d===MANAGE?'MANAGE':head.length?'統括 '+head.map(u=>esc(pname(u))).join('・'):''}</small></span>${stack(ids)}<span class="n">${ids.length}人</span>${CHEV}</button>${inner}</div>`;
 }
 function bdayCard(b){
   const when=b.diff===0?'今日':b.diff===1?'明日':`${b.diff}日後・${fmtMD(b.s)}`;
@@ -1115,11 +1141,12 @@ org(){
   ${loading()}
   <div class="org-top-wrap"><button type="button" class="org-top" data-dept="取締役会" aria-expanded="${openB}">
     <div style="flex:1;min-width:0"><b>取締役会</b><div class="n">${board.length}人</div></div>${stack(board)}${CHEV}</button>
-    ${openB?`<div class="org-body">${memRows(board)}</div>`:''}
+    ${openB?`<div class="org-body">${memRows(board,BOARD)}</div>`:''}
     <div class="org-mgr">${orgNode(MANAGE)}</div>
     <button type="button" class="org-top audit" data-dept="${AUDIT}" aria-expanded="${openA}">
     <div style="flex:1;min-width:0"><b>監査役</b><div class="n">${audit.length?audit.length+'人':'未登録'}</div></div>${stack(audit)}${CHEV}</button>
     ${openA?`<div class="org-body">${memRows(audit)}</div>`:''}</div>
+  ${Object.keys(S.members).some(isTent)?`<p class="tent-note">${TENT} が付いている人は仮の配置です。面談のあとで確定します。</p>`:''}
   <p class="org-lab">事業・機能部門</p><div class="org-tree">${DEPTS.filter(d=>d!==BOARD&&d!==AUDIT&&d!==MANAGE).map(orgNode).join('')}</div>
   ${unassigned.length?`<section class="sec"><div class="sec-h"><h2>配置調整中</h2></div><div class="org-body">${memRows(unassigned)}</div></section>`:''}
   <p class="org-hint" style="margin-top:16px">部門名をタップすると役職やメンバーが表示されます。報告で「@部署名」と書くと、その部署の全員にまとめてメンションできます。</p>`;
@@ -1243,7 +1270,7 @@ function reportSheet(){
   openSheet(`<form id="f"><h2>報告・連絡を投稿</h2>
     <div class="seg" id="rCat" style="margin:0">${Object.keys(CAT).map(c=>`<button type="button" data-c="${c}" class="${c===cat?'on':''}">${c}</button>`).join('')}</div>
     <div class="mwrap"><label class="fld" for="rBody">本文 <span class="hint">「@」に続けて名前・部署名・「全員」を入力するとメンションできます</span></label>
-      <textarea id="rBody" rows="6" maxlength="2000" required placeholder="例：本日の出荷は42件完了。@KopiLink のみなさん、明日の棚卸しの件よろしくお願いします。"></textarea>
+      <textarea id="rBody" rows="6" maxlength="2000" required placeholder="例：本日の出荷は42件完了。@KopiLink部 のみなさん、明日の棚卸しの件よろしくお願いします。"></textarea>
       <div class="sugg" id="mS" hidden></div>
       <div><button type="button" class="seg-like btn ghost" id="atBtn" style="padding:6px 14px;font-size:13.5px">@ メンションを追加</button></div>
     </div>
@@ -1380,8 +1407,8 @@ function eventSheet(id,date){
 function profileSheet(id){
   const m=memberOf(id)||{};
   openSheet(`<div class="prof">
-    <div class="prof-top">${av(id)}<div style="flex:1;min-width:0"><b>${esc(pname(id))}</b>${cxoOf(id).map(r=>`<span class="cxo-pill">${r}</span>`).join('')}
-      <div class="dps">${(m.depts||[]).map(dpill).join('')||'<span class="muted" style="font-size:13px">配置調整中</span>'}</div></div></div>
+    <div class="prof-top">${av(id)}<div style="flex:1;min-width:0"><b>${esc(pname(id))}</b>${cxoOf(id).map(r=>`<span class="cxo-pill">${ROLE_LABEL[r]||r}</span>`).join('')}${m.title?`<span class="mb">${esc(m.title)}</span>`:''}${isTent(id)?TENT:''}
+      <div class="dps">${(m.depts||[]).map(dpill).join('')||'<span class="muted" style="font-size:13px">配置調整中</span>'}${(m.secs||[]).map(x=>`<span class="dp">${esc(x.split('/')[1])}</span>`).join('')}</div></div></div>
     <div class="prof-row"><span class="k">誕生日</span><span>${m.birthday?fmtBd(m.birthday):'<span class="muted">未登録</span>'}</span></div>
     <div class="prof-row"><span class="k">事業にかける思い</span><p class="passion ${m.passion?'':'none'}">${m.passion?esc(m.passion).replace(/\n/g,'<br>'):'まだ書かれていません'}</p></div>
     <div class="actions" style="width:100%"><span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button>
@@ -1604,9 +1631,9 @@ function sample(){
   const t=today(),now=Date.now();
   S.members={
     me:{depts:['取締役会','経営部'],cxo:['CEO'],birthday:'03-14',passion:'一杯のコーヒーから、地域とお客さまの毎日を少しずつ明るくしていきたい。'},
-    u2:{depts:['KopiLink'],birthday:t.slice(5),passion:'オンラインでも、お店で飲むときと同じワクワクを届けたいです。'},
-    u3:{depts:['居酒屋'],birthday:plusDays(5).slice(5),passion:'常連さんが「ここに来ると落ち着く」と言ってくれる店をつくる。'},
-    u4:{depts:['広報'],birthday:'11-02',passion:''},
+    u2:{depts:['KopiLink部'],birthday:t.slice(5),passion:'オンラインでも、お店で飲むときと同じワクワクを届けたいです。'},
+    u3:{depts:['地方創成居酒屋経営部'],birthday:plusDays(5).slice(5),passion:'常連さんが「ここに来ると落ち着く」と言ってくれる店をつくる。'},
+    u4:{depts:['広報部門'],birthday:'11-02',passion:''},
     u5:{depts:['経営部','取締役会'],cxo:['COO'],birthday:'07-21',passion:'産地との関係を大切にしながら、海外にもEntreBrewの味を広げたい。'}};
   S.membersLoaded=true;
   S.tasks=[
