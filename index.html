@@ -290,6 +290,10 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .mem .mt b{display:block;font-size:14px}
 .mem .mt span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .org-hint{font-size:12px;color:var(--muted);padding:4px 8px 2px}
+.org-map{display:block;margin:4px 0 14px;padding:12px;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);text-decoration:none;color:inherit}
+.org-map b{display:block;font-size:14px;margin:0 2px 8px}
+.org-map img{display:block;width:100%;height:auto;border-radius:10px;background:#F7F3EC}
+.org-map span{display:block;font-size:12px;color:var(--muted);margin:8px 2px 0}
 .me-card{display:flex;gap:12px;align-items:center;margin-bottom:16px}
 .me-card .mt{flex:1;min-width:0}
 .me-card .mt b{display:block}
@@ -550,8 +554,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.13.1';
+const APP_VERSION='1.14.0';
 const CHANGELOG=[
+  {v:'1.14.0',date:'2026-10-14',items:['組織図のいちばん上に全体図を追加しました：COO兼CFOが統括するKopiLinkと居酒屋の2つのプロジェクトと、それを横断する広報部門・管理部門（タップで拡大）']},
   {v:'1.13.1',date:'2026-10-13',items:['管理者があらかじめ所属を決めている人は、最初のプロフィール登録で所属が選ばれた状態になります']},
   {v:'1.13.0',date:'2026-10-12',items:['組織図を新しい組織に変えました：取締役会の下に経営部（MANAGE：CEO・COO・CMO・CCO・CSCO・CFO・CSO）、事業・機能部門としてKopiLink・居酒屋・広報・経理','新しい組織へのメンバーの配置は、順次管理者が行います（それまでは「配置調整中」に表示されます）']},
   {v:'1.12.2',date:'2026-10-12',items:['ホームの「最近の賞賛」は、一度表示したら次からは出ないようにしました（広場ではいつでも見られます）']},
@@ -1106,6 +1111,7 @@ org(){
   return `${roNote()}<h1 class="pg">組織図</h1>
   ${me?`<div class="card me-card">${av(me)}<div class="mt"><b>${esc(pname(me))}</b><div class="dps">${mm&&mm.depts&&mm.depts.length?mm.depts.map(dpill).join(''):'<span class="muted" style="font-size:13px">部署が未登録です</span>'}</div></div>
     <button type="button" class="btn ghost" data-myprof style="padding:8px 14px;font-size:13.5px">${mm?'プロフィール':'登録する'}</button></div>`:''}
+  <a class="org-map" href="icons/org-map.png?v=1" target="_blank" rel="noopener"><b>全体図：2つのプロジェクトと、それを横断する広報・管理</b><img src="icons/org-map.png?v=1" alt="Entre Brewの組織図。COO兼CFOがKopiLinkと地方創成居酒屋の2つのプロジェクトを統括し、広報部門と管理部門が2つのプロジェクトに重なりながら会社全体の運営を担う" loading="lazy" width="2162" height="906"><span>タップで拡大できます。（L）＝リーダー。担当者は案で、10/21の全体会議で正式に決定します。</span></a>
   ${loading()}
   <div class="org-top-wrap"><button type="button" class="org-top" data-dept="取締役会" aria-expanded="${openB}">
     <div style="flex:1;min-width:0"><b>取締役会</b><div class="n">${board.length}人</div></div>${stack(board)}${CHEV}</button>
