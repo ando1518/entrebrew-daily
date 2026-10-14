@@ -276,6 +276,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .mem .mt b .mb.head{color:#fff}
 .mem .mt b .mb.sec{color:var(--dc,var(--muted))}
 .mem .mt b .tent{color:var(--accent-ink)}
+.lead{display:inline-block;margin-left:4px;font-size:10px;font-weight:900;color:#fff;background:var(--dc,#5B6CE0);border-radius:5px;padding:0 4px;line-height:1.5;vertical-align:1px}
 .tent-note{margin:12px 0 0;font-size:12.5px;color:var(--muted);font-weight:700}
 .org-sec.adv{border:1.5px dashed var(--line);box-shadow:none}
 .cxo-pill{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:#5B6CE0;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:1px}
@@ -556,7 +557,8 @@ const DEPTS=['取締役会','監査役','経営部','KopiLink部','地方創成�
 const CXO=[['CEO','最高経営責任者'],['COO','最高執行責任者'],['CFO','最高財務責任者'],['CMO','最高マーケティング責任者・広報部門'],['CCO','最高コミュニティ責任者・地方創成居酒屋'],['CSCO','最高サプライチェーン責任者・KopiLink'],['CAO','最高管理責任者・管理部門'],['ADV','相談役']];
 const ROLE_LABEL={ADV:'CEOアドバイザー'};
 // 各部門の課（決まったらここに追加する）
-const SECTIONS={'KopiLink部':['国際事業課','商品開発課','営業課'],'地方創成居酒屋経営部':['経理課','衛生管理課','コンセプト構想課'],'広報部門':['EC課','マーケティング課','コンテンツ構想課'],'管理部門':[]};
+const SECTIONS={'KopiLink部':['国際事業課','商品開発課','営業課'],'地方創成居酒屋経営部':['コンセプト構想課','衛生管理課','経理課'],'広報部門':['マーケティング課','EC課','コンテンツ構想課','Produce Money Unit'],'管理部門':[]};
+const SEC_NOTE={'Produce Money Unit':'3月まで・仮'};
 const BOARD='取締役会',AUDIT='監査役',MANAGE='経営部';
 const DC={'経営部':'#5B6CE0','KopiLink部':'#9A5B2E','地方創成居酒屋経営部':'#DC3F47','広報部門':'#C2459E','管理部門':'#7A4FD0','取締役会':'#E08A12','監査役':'#4E6B8A','経営管理総務部':'#5B6CE0','経営管理経理部':'#7A4FD0','経営管理部':'#5B6CE0','国際事業部':'#1C9BB8','営業部':'#DC3F47','マーケティング部':'#C2459E','EC部':'#2872D9','商品部':'#15A36A','店舗運営部':'#9A7433'};
 const CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"/></svg>';
@@ -566,8 +568,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.15.0';
+const APP_VERSION='1.15.1';
 const CHANGELOG=[
+  {v:'1.15.1',date:'2026-10-14',items:['組織図の仮配置を10/14ゼミ全体会議の担当者案に合わせました（課のリーダーに「L」を表示、広報部門にProduce Money Unitを追加）']},
   {v:'1.15.0',date:'2026-10-14',items:['組織図の部門を KopiLink部・地方創成居酒屋経営部・広報部門・管理部門 にし、各部門の課を入れました','メンバーを仮配置しました。「仮」と付いている人は仮の配置で、面談のあとで確定します','経営部（MANAGE）の役職に CAO（最高管理責任者）と CEOアドバイザーを追加しました']},
   {v:'1.14.0',date:'2026-10-14',items:['組織図のいちばん上に全体図を追加しました：COO兼CFOが統括するKopiLinkと居酒屋の2つのプロジェクトと、それを横断する広報部門・管理部門（タップで拡大）']},
   {v:'1.13.1',date:'2026-10-13',items:['管理者があらかじめ所属を決めている人は、最初のプロフィール登録で所属が選ばれた状態になります']},
@@ -1011,7 +1014,7 @@ function memBadges(id,d){
   const m=S.members[id]||{},b=[];
   if(d&&(m.heads||[]).includes(d))b.push('<span class="mb head">統括</span>');
   if(m.title)b.push(`<span class="mb">${esc(m.title)}</span>`);
-  if(d)(m.secs||[]).filter(x=>x.startsWith(d+'/')).forEach(x=>b.push(`<span class="mb sec">${esc(x.split('/')[1])}</span>`));
+  if(d)(m.secs||[]).filter(x=>x.startsWith(d+'/')).forEach(x=>b.push(`<span class="mb sec">${esc(x.split('/')[1])}${(m.secLeads||[]).includes(x)?'（L）':''}</span>`));
   if(isTent(id))b.push(TENT);
   return b.join('');
 }
@@ -1020,17 +1023,18 @@ function memRows(ids,d){
   return ids.map(id=>{const m=S.members[id]||{};const line=(m.passion||'').replace(/\s+/g,' ');
     return `<button type="button" class="mem" data-prof="${esc(id)}">${av(id)}<span class="mt"><b>${esc(pname(id))}${memBadges(id,d)}</b><span>${line?esc(line):'思いはまだ書かれていません'}</span></span>${CHEV}</button>`;}).join('');
 }
-const chip=u=>`<button type="button" class="who-sm" data-prof="${esc(u)}">${av(u,'sm')}${esc(pname(u))}${isTent(u)?TENT:''}</button>`;
+const isLead=(u,key)=>((S.members[u]||{}).secLeads||[]).includes(key);
+const chip=(u,key)=>`<button type="button" class="who-sm" data-prof="${esc(u)}">${av(u,'sm')}${esc(pname(u))}${key&&isLead(u,key)?'<span class="lead">L</span>':''}${isTent(u)?TENT:''}</button>`;
 const cxoOf=id=>((S.members[id]||{}).cxo||[]).filter(r=>CXO.some(([k])=>k===r));
 const cxoHolders=r=>Object.keys(S.members).filter(id=>cxoOf(id).includes(r)).sort(byName);
 function orgNode(d){
   const ids=deptMembers(d),open=S.orgOpen.has(d),secs=SECTIONS[d]||[];
   let inner='';
   if(open&&d===MANAGE){
-    inner=`<div class="org-sub">${CXO.map(([r,j])=>{const h=cxoHolders(r);return `<div class="org-sec role ${r==='ADV'?'adv':''}"><b class="rl">${ROLE_LABEL[r]||r}</b><span class="rj">${j}</span><span class="who">${h.length?h.map(chip).join(''):'<span class="tbd">未定</span>'}</span></div>`;}).join('')}</div>`;
+    inner=`<div class="org-sub">${CXO.map(([r,j])=>{const h=cxoHolders(r);return `<div class="org-sec role ${r==='ADV'?'adv':''}"><b class="rl">${ROLE_LABEL[r]||r}</b><span class="rj">${j}</span><span class="who">${h.length?h.map(u=>chip(u)).join(''):'<span class="tbd">未定</span>'}</span></div>`;}).join('')}</div>`;
   }else if(open){
-    const inSec=c=>ids.filter(u=>((S.members[u]||{}).secs||[]).includes(d+'/'+c));
-    inner=`<div class="org-sub">${secs.map(c=>{const h=inSec(c);return `<div class="org-sec"><span class="sdot"></span><b>${esc(c)}</b><span class="who">${h.length?h.map(chip).join(''):'<span class="tbd">未定</span>'}</span></div>`;}).join('')||'<div class="org-hint" style="padding:4px 2px">課はこれから設定します</div>'}
+    const inSec=c=>ids.filter(u=>((S.members[u]||{}).secs||[]).includes(d+'/'+c)).sort((a,b)=>isLead(b,d+'/'+c)-isLead(a,d+'/'+c));
+    inner=`<div class="org-sub">${secs.map(c=>{const h=inSec(c);return `<div class="org-sec"><span class="sdot"></span><b>${esc(c)}</b>${SEC_NOTE[c]?`<span class="rj">${SEC_NOTE[c]}</span>`:''}<span class="who">${h.length?h.map(u=>chip(u,d+'/'+c)).join(''):'<span class="tbd">未定</span>'}</span></div>`;}).join('')||'<div class="org-hint" style="padding:4px 2px">課はこれから設定します</div>'}
       <div class="org-body" style="margin-top:2px">${memRows(ids,d)}</div></div>`;
   }
   const head=ids.filter(u=>((S.members[u]||{}).heads||[]).includes(d));
@@ -1146,7 +1150,7 @@ org(){
     <button type="button" class="org-top audit" data-dept="${AUDIT}" aria-expanded="${openA}">
     <div style="flex:1;min-width:0"><b>監査役</b><div class="n">${audit.length?audit.length+'人':'未登録'}</div></div>${stack(audit)}${CHEV}</button>
     ${openA?`<div class="org-body">${memRows(audit)}</div>`:''}</div>
-  ${Object.keys(S.members).some(isTent)?`<p class="tent-note">${TENT} が付いている人は仮の配置です。面談のあとで確定します。</p>`:''}
+  ${Object.keys(S.members).some(isTent)?`<p class="tent-note">${TENT} が付いている人は仮の配置（担当者案）です。10/21の全体会議で正式に決定します。<span class="lead" style="--dc:#8A7A6C">L</span> は課のリーダーです。</p>`:''}
   <p class="org-lab">事業・機能部門</p><div class="org-tree">${DEPTS.filter(d=>d!==BOARD&&d!==AUDIT&&d!==MANAGE).map(orgNode).join('')}</div>
   ${unassigned.length?`<section class="sec"><div class="sec-h"><h2>配置調整中</h2></div><div class="org-body">${memRows(unassigned)}</div></section>`:''}
   <p class="org-hint" style="margin-top:16px">部門名をタップすると役職やメンバーが表示されます。報告で「@部署名」と書くと、その部署の全員にまとめてメンションできます。</p>`;
