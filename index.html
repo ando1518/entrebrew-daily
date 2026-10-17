@@ -112,6 +112,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .c-day{background:var(--leaf-soft);color:var(--leaf)}
 .c-note{background:var(--accent-soft);color:var(--accent-ink)}
 .c-share{background:var(--sky-soft);color:var(--sky)}
+.c-min{background:var(--ink);color:var(--surface)}
 .to-me{background:var(--cherry-soft);color:var(--cherry)}
 
 /* tasks */
@@ -550,7 +551,7 @@ const XIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wid
 const PLUS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
 const STATUS={todo:'未着手',doing:'進行中',done:'完了'};
 const NEXT={todo:'doing',doing:'done',done:'todo'};
-const CAT={'日報':'c-day','連絡':'c-note','共有':'c-share'};
+const CAT={'日報':'c-day','連絡':'c-note','共有':'c-share','議事録':'c-min'};
 const REACTS=[['like','👍','いいね'],['thanks','🙏','ありがとう'],['ok','👌','了解'],['yay','🎉','すごい']];
 const DEPTS=['取締役会','監査役','経営部','KopiLink部','地方創成居酒屋経営部','広報部門','管理部門'];
 // 経営部（MANAGE）の役職。担当はメンバーの cxo（例：['CCO']）で決まる
@@ -568,8 +569,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.15.1';
+const APP_VERSION='1.15.2';
 const CHANGELOG=[
+  {v:'1.15.2',date:'2026-10-17',items:['報告・連絡の種類に「議事録」を追加しました（投稿時に選べます。一覧の絞り込みにも追加）']},
   {v:'1.15.1',date:'2026-10-14',items:['組織図の仮配置を10/14ゼミ全体会議の担当者案に合わせました（課のリーダーに「L」を表示、広報部門にProduce Money Unitを追加）']},
   {v:'1.15.0',date:'2026-10-14',items:['組織図の部門を KopiLink部・地方創成居酒屋経営部・広報部門・管理部門 にし、各部門の課を入れました','メンバーを仮配置しました。「仮」と付いている人は仮の配置で、面談のあとで確定します','経営部（MANAGE）の役職に CAO（最高管理責任者）と CEOアドバイザーを追加しました']},
   {v:'1.14.0',date:'2026-10-14',items:['組織図のいちばん上に全体図を追加しました：COO兼CFOが統括するKopiLinkと居酒屋の2つのプロジェクトと、それを横断する広報部門・管理部門（タップで拡大）']},
@@ -1102,7 +1104,7 @@ reports(){
   let list=sortedReports();
   if(f==='me')list=list.filter(isToMe);
   else if(f!=='all')list=list.filter(r=>r.cat===f);
-  const seg=[['all','すべて'],['me','あなた宛て'],['日報','日報'],['連絡','連絡'],['共有','共有']]
+  const seg=[['all','すべて'],['me','あなた宛て'],['日報','日報'],['連絡','連絡'],['共有','共有'],['議事録','議事録']]
     .map(([k,l])=>`<button type="button" data-rf="${k}" class="${f===k?'on':''}">${l}${k==='me'&&myMentions().length?`<span class="ct">${myMentions().length}</span>`:''}</button>`).join('');
   return `${roNote()}<h1 class="pg">報告・連絡</h1><div class="seg">${seg}</div>${loading()}
   <div class="list">${list.length?list.map(reportCard).join(''):empty('該当する報告はありません','本文で「@名前」と書くと相手にメンションできます')}</div>`;
