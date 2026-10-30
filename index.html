@@ -278,6 +278,15 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .mem .mt b .mb.sec{color:var(--dc,var(--muted))}
 .mem .mt b .tent{color:var(--accent-ink)}
 .lead{display:inline-block;margin-left:4px;font-size:10px;font-weight:900;color:#fff;background:var(--dc,#5B6CE0);border-radius:5px;padding:0 4px;line-height:1.5;vertical-align:1px}
+.vwrap{overflow-x:auto;margin:0 -4px}
+.vtab{border-collapse:collapse;font-size:12px;width:100%}
+.vtab th,.vtab td{padding:5px 3px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+.vtab th small{display:block;font-size:10px;color:var(--muted);font-weight:600}
+.vtab th.nm{text-align:left;display:flex;align-items:center;gap:6px;font-weight:700;font-size:12.5px;position:sticky;left:0;background:var(--surface);min-width:96px}
+.vtab .td{background:var(--accent-soft)}
+.vtab .last{font-size:11px;color:var(--muted);text-align:right}
+.vd{box-sizing:border-box;display:inline-grid;place-items:center;min-width:16px;height:16px;border-radius:8px;background:var(--leaf);color:#fff;font-size:10px;font-weight:800;padding:0 3px}
+.vn{display:inline-block;width:6px;height:6px;border-radius:3px;background:var(--line)}
 .tent-note{margin:12px 0 0;font-size:12.5px;color:var(--muted);font-weight:700}
 .org-sec.adv{border:1.5px dashed var(--line);box-shadow:none}
 .cxo-pill{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:#5B6CE0;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:1px}
@@ -569,8 +578,9 @@ const normDept=d=>DEPT_ALIAS[d]||d;
 const normDepts=a=>Array.isArray(a)?[...new Set(a.map(normDept))]:a;
 const dpill=d=>`<span class="dp" style="--dc:${DC[d]||'#888'}">${esc(d)}</span>`;
 const fmtBd=s=>{if(!s)return '';const [m,d]=s.split('-').map(Number);return `${m}月${d}日`;};
-const APP_VERSION='1.15.2';
+const APP_VERSION='1.16.0';
 const CHANGELOG=[
+  {v:'1.16.0',date:'2026-10-30',items:['アプリを開いた日時を記録するようにしました（管理者が利用状況を確認するためのもので、記録は管理者だけが見られます）']},
   {v:'1.15.2',date:'2026-10-17',items:['報告・連絡の種類に「議事録」を追加しました（投稿時に選べます。一覧の絞り込みにも追加）']},
   {v:'1.15.1',date:'2026-10-14',items:['組織図の仮配置を10/14ゼミ全体会議の担当者案に合わせました（課のリーダーに「L」を表示、広報部門にProduce Money Unitを追加）']},
   {v:'1.15.0',date:'2026-10-14',items:['組織図の部門を KopiLink部・地方創成居酒屋経営部・広報部門・管理部門 にし、各部門の課を入れました','メンバーを仮配置しました。「仮」と付いている人は仮の配置で、面談のあとで確定します','経営部（MANAGE）の役職に CAO（最高管理責任者）と CEOアドバイザーを追加しました']},
@@ -1457,6 +1467,44 @@ function maybeOnboard(){
     .then(p=>{if(!S.members[S.me.id])profileForm(true,p&&{depts:(p.depts||[]).filter(x=>DEPTS.includes(x)),name:p.name||''});});
 }
 
+
+/* ---------- 閲覧の記録（管理者だけが見られる） ---------- */
+// アプリを開いたとき・戻ってきたときに、その日の最終閲覧時刻と回数を記録（端末ごとに15分に1回まで）
+function logVisit(){
+  if(!db||!S.me.id||S.preview)return;
+  let last=0;try{last=Number(localStorage.getItem('eb-visit')||0);}catch(e){}
+  const now=Date.now();if(now-last<15*60e3)return;
+  try{localStorage.setItem('eb-visit',String(now));}catch(e){}
+  const day=today();
+  db.collection('visits').doc(S.me.id).set({lastAt:now,days:{[day]:{l:now,n:firebase.firestore.FieldValue.increment(1)}}},{merge:true}).catch(()=>{});
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')logVisit();});
+async function checkAdmin(){
+  try{const em=((auth.currentUser&&auth.currentUser.email)||'').toLowerCase();if(!em)return;
+    const d=await db.collection('allow').doc(em).get();S.isAdmin=!!(d.exists&&d.data().role==='admin');}catch(e){S.isAdmin=false;}
+}
+async function visitsSheet(range){
+  const days=Number(range)||7;
+  openSheet('<div class="about"><h2>閲覧状況</h2><p class="intro">読み込み中…</p></div>');
+  let docs=[];
+  try{docs=(await db.collection('visits').get()).docs.map(d=>({id:d.id,...d.data()}));}
+  catch(e){openSheet(`<div class="about"><h2>閲覧状況</h2><p class="intro">${e&&e.code==='permission-denied'?'見る権限がありません（管理者がFirestoreのルールを更新すると見られます）':'読み込めませんでした'}</p><div class="actions"><span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button></div></div>`);return;}
+  const V=Object.fromEntries(docs.map(d=>[d.id,d]));
+  const t=today(),list=[];for(let i=days-1;i>=0;i--)list.push(plusDays(-i));
+  const ids=Object.keys(S.members).sort((a,b)=>((V[b]||{}).lastAt||0)-((V[a]||{}).lastAt||0)||byName(a,b));
+  const todayN=ids.filter(u=>((V[u]||{}).days||{})[t]).length;
+  const dow=s=>W[parse(s).getDay()];
+  const head=`<tr><th></th>${list.map(d=>`<th class="${d===t?'td':''}">${Number(d.slice(8))}<small>${dow(d)}</small></th>`).join('')}<th>最後</th></tr>`;
+  const rows=ids.map(u=>{const v=V[u]||{},dd=v.days||{};
+    return `<tr><th class="nm">${av(u,'sm')}<span>${esc(pname(u))}</span></th>${list.map(d=>{const x=dd[d];return `<td class="${d===t?'td':''}">${x?`<span class="vd" title="${x.n||1}回・最後 ${new Date(x.l).toTimeString().slice(0,5)}">${(x.n||1)>1?x.n:''}</span>`:'<span class="vn"></span>'}</td>`;}).join('')}<td class="last">${v.lastAt?ago(v.lastAt):'<span class="muted">記録なし</span>'}</td></tr>`;}).join('');
+  const since=docs.reduce((m,d)=>Math.min(m,...Object.keys(d.days||{}).map(k=>parse(k).getTime())),Infinity);
+  openSheet(`<div class="about visits"><h2>閲覧状況</h2>
+    <div class="seg" style="margin:0">${[7,14,30].map(n=>`<button type="button" data-visits="${n}" class="${n===days?'on':''}">${n}日</button>`).join('')}</div>
+    <p class="intro" style="margin:0">今日アプリを開いた人：<b>${todayN}人</b>／${ids.length}人。丸の数字はその日に開いた回数（15分以内の開き直しは1回）です。</p>
+    <div class="vwrap"><table class="vtab">${head}${rows}</table></div>
+    <p class="hint" style="margin:0">${isFinite(since)?`${fmtMD(ymd(new Date(since)))}から記録しています。`:'記録はこのバージョンから始まります。'}この画面は管理者だけが見られます。</p>
+    <div class="actions"><span class="sp"></span><button type="button" class="btn ghost" data-close>閉じる</button></div></div>`);
+}
 function aboutSheet(){
   markSeen();paint();
   const fb=S.myFb.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
@@ -1465,6 +1513,7 @@ function aboutSheet(){
       <div><b>EntreBrew Daily</b><span>バージョン ${APP_VERSION}・最新の状態です</span></div></div>
     <p class="intro">新しいバージョンは、アプリ（ページ）を開き直すと反映されます。</p>
     ${S.canWrite?'<button type="button" class="btn primary" data-fb>不具合・要望を送る</button>':''}
+    ${S.isAdmin?'<button type="button" class="btn ghost" data-visits>閲覧状況を見る（管理者）</button>':''}
     ${fb.length?`<h3>送った不具合・要望</h3><div class="fb-list">${fb.map(f=>`<div class="fb-item"><div class="fb-h"><span class="pill ${FB_ST[f.status]||'s-new'}">${esc(f.status||'受付')}</span><span>${esc(f.type)}</span><span>${ago(f.createdAt)}</span></div>
       <p>${esc(f.text)}</p>${f.reply?`<div class="fb-reply">${esc(f.reply)}</div>`:''}</div>`).join('')}</div>`:''}
     ${S.me.id&&!S.preview?pushSectionHtml():''}
@@ -1525,7 +1574,7 @@ function setView(v){
 document.addEventListener('click',async e=>{
   if(e.target.closest('a.tref,a.rlink,a.fmain'))return;
   if(e.target.closest('[data-logout]')){closeSheet();if(pushGet())await disablePush(true);if(auth)auth.signOut();return;}
-  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-tdept],[data-tgrp],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-mkr],[data-mkf],[data-react],[data-cmt],[data-cdel],[data-acks],[data-rmatt],[data-lf],[data-lreact],[data-ldel],[data-limg],#fab');
+  const g=e.target.closest('[data-go],.tab,[data-cycle],[data-task],[data-ack],[data-delrep],[data-day],[data-cal],[data-tf],[data-tdept],[data-tgrp],[data-rf],[data-td],[data-tdx],[data-ev],[data-close],[data-dept],[data-prof],[data-myprof],[data-editprof],[data-about],[data-seen],[data-fb],[data-pushon],[data-pushoff],[data-pushdismiss],[data-fold],[data-foldback],[data-foldedit],[data-fopen],[data-fsave],[data-fdel],[data-fcopy],[data-mkr],[data-mkf],[data-react],[data-cmt],[data-cdel],[data-acks],[data-rmatt],[data-lf],[data-lreact],[data-ldel],[data-limg],[data-visits],#fab');
   if(!g){if(e.target.id==='back')closeSheet();return;}
   const ds=g.dataset;
   if('rmatt' in ds)return;
@@ -1584,6 +1633,7 @@ document.addEventListener('click',async e=>{
   if('about' in ds){aboutSheet();return;}
   if('seen' in ds){markSeen();paint();return;}
   if('fb' in ds){feedbackSheet();return;}
+  if('visits' in ds){visitsSheet(ds.visits);return;}
   if(ds.dept){if(S.orgOpen.has(ds.dept))S.orgOpen.delete(ds.dept);else S.orgOpen.add(ds.dept);paint();return;}
   if(ds.prof){profileSheet(ds.prof);return;}
   if('myprof' in ds){if(!S.me.id){toast('サインインするとプロフィールを登録できます');return;}if(memberOf(S.me.id))profileSheet(S.me.id);else if(S.canWrite)profileForm(false);return;}
@@ -2102,6 +2152,7 @@ function start(u){
         e=>{console.warn('lounge',e);if(e&&e.code==='permission-denied'){S.loungeDenied=true;schedule();}}));
       unsubs.push(db.collection('feedback').where('uid','==',u.uid).onSnapshot(fs=>{S.myFb=fs.docs.map(d=>({id:d.id,...d.data()}));},()=>{}));
       S.loaded=true;
+      logVisit();checkAdmin();
       checkPush().then(()=>{schedule();refreshPush();});
     }
     if(!s.metadata.fromCache&&!S.membersLoaded){S.membersLoaded=true;setTimeout(maybeOnboard,300);}
